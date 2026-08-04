@@ -1,0 +1,47 @@
+# Состав Platinum userspace поверх Ubuntu Base.
+#
+# Здесь только пакеты из архива Ubuntu: собственные пакеты Platinum появятся
+# отдельной секцией, когда у платформы будет свой apt-репозиторий с ключом.
+#
+# Ubuntu Base приходит со своим `sources.list`, поэтому suite и зеркало здесь не
+# переопределяются: рассинхронизация suite с базовым архивом ломает apt.
+#
+# linux-firmware намеренно отсутствует: firmware Wi-Fi и BT для A733 приходит из
+# Armbian BSP, а полный пакет Ubuntu добавил бы к образу около гигабайта.
+
+install_recommends = false
+
+install = [
+    # init и базовая инфраструктура системы
+    "systemd",
+    "systemd-sysv",
+    "systemd-resolved",
+    "udev",
+    "dbus",
+    "kmod",
+
+    # initramfs: kernel-пакеты Armbian вызывают его hooks при установке
+    "initramfs-tools",
+
+    # файловые системы образа и расширение rootfs при первом запуске
+    "e2fsprogs",
+    "dosfstools",
+    "parted",
+
+    # сеть, включая Wi-Fi платы
+    "netplan.io",
+    "iproute2",
+    "iputils-ping",
+    "wpasupplicant",
+    "iw",
+    "rfkill",
+
+    # доступ и базовая эксплуатация
+    "openssh-server",
+    "sudo",
+    "ca-certificates",
+    "locales",
+    "tzdata",
+    "less",
+    "nano",
+]

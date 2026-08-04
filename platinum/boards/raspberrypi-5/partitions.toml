@@ -1,0 +1,33 @@
+# Разметка образа Raspberry Pi 5.
+#
+# Загрузчик Pi живёт в SPI EEPROM платы и в сырые сектора образа не пишется,
+# поэтому под него ничего резервировать не нужно: 4 MiB берутся под выравнивание
+# и таблицу разделов, как в официальных образах Raspberry Pi.
+reserved_mib = 4
+
+# Прошивка читает config.txt только с FAT32-раздела и только до запуска ядра,
+# поэтому загрузочный раздел обязателен и обязан быть первым.
+#
+# Метка не длиннее 11 символов и в верхнем регистре: FAT хранит её в загрузочном
+# секторе, а mkfs.vfat всё равно поднял бы регистр — и `LABEL=` в fstab перестал
+# бы совпадать.
+[[partitions]]
+name = "boot"
+label = "PLTMBOOT"
+filesystem = "fat32"
+start_mib = 4
+size_mib = 512
+mount_point = "/boot/firmware"
+bootable = true
+pass = 2
+
+# Размер больше, чем у Zero 3W: linux-image-raspi тянет зависимостью
+# linux-firmware, а это сотни мебибайт firmware всех устройств.
+[[partitions]]
+name = "root"
+label = "platinum-root"
+filesystem = "ext4"
+start_mib = 516
+size_mib = 5120
+mount_point = "/"
+pass = 1

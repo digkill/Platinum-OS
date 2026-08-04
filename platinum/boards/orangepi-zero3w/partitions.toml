@@ -1,0 +1,37 @@
+# Разметка образа Platinum OS.
+#
+# Таблица разделов — MBR, а не GPT: BROM Allwinner читает SPL начиная с 8 КиБ, а
+# первичный заголовок GPT занимает сектора 1..33 и был бы затёрт загрузчиком.
+#
+# Смещение первого раздела 32 MiB взято из Armbian `OFFSET=32` для sun60iw2 и
+# проверено по `write_uboot_platform` в config/sources/families/sun60iw2.conf:
+#
+#   dd if=boot0_sdcard.fex  of=$DEVICE bs=1k seek=8       →  8 KiB
+#   dd if=boot_package.fex  of=$DEVICE bs=1k seek=16400   → ~16.02 MiB
+#
+# Раздел с 16 MiB был бы затёрт boot_package на 16 KiB внутрь файловой системы.
+# Сами смещения здесь не дублируются: их применяет `platform_install.sh` из
+# пакета U-Boot, сборка вызывает его функцию.
+#
+# Отдельного раздела /boot нет: ядро, DTB и extlinux живут в корневой файловой
+# системе, а U-Boot читает ext4 напрямую.
+#
+# Размер образа определяется границей последнего раздела. 3 GiB рассчитаны на
+# карту 4 GB; на большем носителе файловая система расширяется при первом
+# запуске.
+
+# Область загрузчика: `boot_package.fex` (1.33 МиБ) пишется на 16400 KiB и
+# заканчивается около 17.4 МиБ. 32 МиБ берутся из Armbian `OFFSET=32` — с
+# запасом на рост blob-а. Раздел, начатый раньше, был бы затёрт уже после
+# создания файловой системы, поэтому проверку делает ImageLayout.
+reserved_mib = 32
+
+[[partitions]]
+name = "root"
+label = "platinum-root"
+filesystem = "ext4"
+start_mib = 32
+size_mib = 3072
+mount_point = "/"
+bootable = true
+pass = 1

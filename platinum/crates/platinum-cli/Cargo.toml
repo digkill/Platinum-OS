@@ -1,0 +1,25 @@
+[package]
+name = "platinum-cli"
+description = "CLI Platinum OS One"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "platinum"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+platinum-armbian-bsp.workspace = true
+platinum-board.workspace = true
+platinum-builder.workspace = true
+platinum-core.workspace = true
+platinum-logger.workspace = true
+tracing.workspace = true
+
+[lints]
+workspace = true

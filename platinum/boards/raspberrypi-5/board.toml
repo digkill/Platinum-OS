@@ -1,0 +1,37 @@
+# Raspberry Pi 5. Плата принципиально отличается от Orange Pi Zero 3W:
+# загрузчик лежит в SPI EEPROM самой платы, а не в образе, и читает FAT-раздел
+# ещё до запуска ядра.
+id = "raspberrypi-5"
+name = "Raspberry Pi 5"
+architecture = "arm64"
+soc = "Broadcom BCM2712"
+bsp_family = "bcm2712"
+memory_mib = 8192
+
+# Имя файла в дереве, которое раскладывает linux-modules-*-raspi:
+# /usr/lib/firmware/<версия>/device-tree/broadcom/. Проверено по пакету
+# linux-modules-7.0.0-1009-raspi архива resolute.
+dtb = "bcm2712-rpi-5-b.dtb"
+
+# Секции [armbian] здесь нет намеренно: Armbian поддерживает только bcm2711
+# (rpi4b), а Pi 5 — это bcm2712. Ядро приходит из архива Ubuntu обычным apt,
+# поэтому ни checkout, ни compile.sh, ни часов компиляции не требуется.
+
+[bootloader]
+method = "raspberry-pi"
+firmware_mount_point = "/boot/firmware"
+# Значения прошивки, не выводимые из данных платы.
+config = [
+    # 64-битный режим: Pi 5 иначе не стартует с arm64-ядром.
+    "arm_64bit=1",
+    # UART на 40-контактном разъёме — единственная консоль до поднятия сети.
+    "enable_uart=1",
+]
+
+[rootfs]
+# Тот же базовый userspace, что и у остальных плат Platinum.
+# https://cdimage.ubuntu.com/ubuntu-base/releases/26.04/release/SHA256SUMS
+release = "26.04"
+architecture = "arm64"
+url = "https://cdimage.ubuntu.com/ubuntu-base/releases/26.04/release/ubuntu-base-26.04-base-arm64.tar.gz"
+sha256 = "b2b46a37324ea1954e93f293fe6d7c2241daf2fc298c4022e6e4caceeed74cab"

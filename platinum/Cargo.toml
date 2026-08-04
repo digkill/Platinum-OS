@@ -1,0 +1,57 @@
+[workspace]
+resolver = "3"
+
+members = [
+    "crates/platinum-cli",
+    "crates/platinum-builder",
+    "crates/platinum-core",
+    "crates/platinum-board",
+    "crates/platinum-armbian-bsp",
+    "crates/platinum-downloader",
+    "crates/platinum-rootfs",
+    "crates/platinum-image",
+    "crates/platinum-logger",
+    "crates/platinum-utils",
+]
+
+# Версия и лицензия задаются один раз: workspace выпускается как единый
+# продукт, поэтому расхождение метаданных между crates создавало бы ложное
+# впечатление независимых релизов.
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "Apache-2.0"
+authors = ["Platinum OS One contributors"]
+
+# Единые версии внешних зависимостей: два crate с разными версиями serde или
+# thiserror дали бы несовместимые типы на границах между ними.
+[workspace.dependencies]
+anyhow = "1.0"
+clap = { version = "4.6", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+sha2 = "0.11"
+thiserror = "2.0"
+toml = "1.1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+ureq = "3.3"
+
+platinum-armbian-bsp = { path = "crates/platinum-armbian-bsp", version = "0.1.0" }
+platinum-board = { path = "crates/platinum-board", version = "0.1.0" }
+platinum-builder = { path = "crates/platinum-builder", version = "0.1.0" }
+platinum-core = { path = "crates/platinum-core", version = "0.1.0" }
+platinum-downloader = { path = "crates/platinum-downloader", version = "0.1.0" }
+platinum-image = { path = "crates/platinum-image", version = "0.1.0" }
+platinum-logger = { path = "crates/platinum-logger", version = "0.1.0" }
+platinum-rootfs = { path = "crates/platinum-rootfs", version = "0.1.0" }
+platinum-utils = { path = "crates/platinum-utils", version = "0.1.0" }
+
+# Публичный API документируется всегда, а unsafe запрещён на уровне workspace:
+# у build-системы нет задач, которые нельзя решить безопасным Rust.
+[workspace.lints.rust]
+missing_docs = "warn"
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+unwrap_used = "deny"

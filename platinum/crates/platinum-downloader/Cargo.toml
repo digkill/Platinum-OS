@@ -1,0 +1,17 @@
+[package]
+name = "platinum-downloader"
+description = "Загрузка внешних артефактов с проверкой SHA-256 для Platinum OS One"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+sha2.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+ureq.workspace = true
+
+[lints]
+workspace = true

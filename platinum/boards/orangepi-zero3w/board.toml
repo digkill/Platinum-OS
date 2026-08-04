@@ -1,0 +1,72 @@
+# Это отдельная плата, а не Orange Pi Zero 3 на H618. Board id Armbian тоже
+# отличается: его используют только BSP-адаптеры, а не универсальный engine.
+id = "orangepi-zero3w"
+name = "Orange Pi Zero 3W"
+architecture = "arm64"
+soc = "Allwinner A733"
+bsp_family = "sun60iw2"
+memory_mib = 12288
+dtb = "allwinner/sun60i-a733-orangepi-zero3w.dtb"
+
+# Vendor-драйверы Wi-Fi/BT AIC8800 не имеют modalias и сами не поднимаются.
+# Список повторяет MODULES из config/sources/families/sun60iw2.conf.
+# Заменять их out-of-tree DKMS-драйвером нельзя: он перекрывает in-tree bsp и
+# ломает fdrv («Unknown symbol») — предупреждение upstream в том же файле.
+#
+# Ключ обязан стоять до первой таблицы: TOML отнёс бы его к ней, а не к плате.
+modules = ["aic8800_bsp", "aic8800_fdrv", "aic8800_btlpm"]
+
+# Плата грузится boot-скриптом, а не extlinux.conf: vendor U-Boot здесь 2018.05,
+# и скрипт Armbian переопределяет адреса загрузки, потому что значения по
+# умолчанию Orange Pi не вмещают ядро больше ~30 МБ.
+#
+# Значения повторяют config/sources/families/sun60iw2.conf pinned checkout:
+#
+#   BOOTSCRIPT="boot-sun60iw2.cmd:boot.cmd"
+#   BOOTENV_FILE="sun60iw2.txt"
+#   INITRD_ARCH="arm"          # vendor U-Boot собирается 32-битным
+#   OVERLAY_PREFIX="sun60i-a733"
+#
+# Сам скрипт не копируется в репозиторий: сборка берёт его из checkout, и
+# расхождение с upstream невозможно.
+[bootloader]
+method = "boot-script"
+script = "boot-sun60iw2.cmd"
+env = "sun60iw2.txt"
+initrd_arch = "arm"
+overlay_prefix = "sun60i-a733"
+
+# Firmware Wi-Fi/BT. У платы нет Ethernet, поэтому без него сети нет совсем.
+#
+# Берутся только файлы AIC8800D80 (6 файлов, ~551 КБ), а не пакет
+# `armbian-firmware` целиком: он несёт firmware всех плат Armbian.
+#
+# Commit зафиксирован, хотя Armbian тянет этот репозиторий с плавающего
+# `master` (artifact-firmware.sh): иначе две сборки одного образа получили бы
+# разный firmware.
+[firmware]
+repository = "https://github.com/armbian/firmware"
+revision = "d9846710f54da5e4383e2d67311819659ac2cf5c"
+directories = ["aic8800/SDIO/aic8800D80"]
+
+# Драйвер ищет firmware по плоскому пути, а репозиторий хранит его деревом.
+# Симлинк повторяет post_family_tweaks__sun60iw2 Armbian.
+[firmware.links]
+aic8800d80 = "aic8800/SDIO/aic8800D80"
+
+[armbian]
+# В этом commit поддержка Zero 3W была слита в upstream Armbian Build.
+# Pin обязателен: плавающая ветка main сделала бы BSP невоспроизводимым.
+repository = "https://github.com/armbian/build.git"
+revision = "a7f3a943d30769d5657354e9660329171ca5c39d"
+board = "orangepizero3w"
+kernel_branch = "vendor"
+
+[rootfs]
+# SHA-256 взят из официального SHA256SUMS выпуска, а не вычислен локально:
+# локальный файл мог бы быть повреждён ещё до попадания в конфигурацию.
+# https://cdimage.ubuntu.com/ubuntu-base/releases/26.04/release/SHA256SUMS
+release = "26.04"
+architecture = "arm64"
+url = "https://cdimage.ubuntu.com/ubuntu-base/releases/26.04/release/ubuntu-base-26.04-base-arm64.tar.gz"
+sha256 = "b2b46a37324ea1954e93f293fe6d7c2241daf2fc298c4022e6e4caceeed74cab"

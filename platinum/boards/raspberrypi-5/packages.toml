@@ -1,0 +1,57 @@
+# Состав Platinum userspace поверх Ubuntu Base.
+#
+# Здесь только пакеты из архива Ubuntu: собственные пакеты Platinum появятся
+# отдельной секцией, когда у платформы будет свой apt-репозиторий с ключом.
+#
+# Ubuntu Base приходит со своим `sources.list`, поэтому suite и зеркало здесь не
+# переопределяются: рассинхронизация suite с базовым архивом ломает apt.
+#
+# Ядро приходит из архива Ubuntu, а не из BSP: linux-image-raspi — метапакет,
+# который тянет актуальную сборку ядра Pi вместе с модулями и DTB.
+#
+# Он зависит от linux-firmware, и это осознанная плата за поддержку: у Pi 5
+# Wi-Fi/BT работают на firmware из этого пакета. Образ из-за него заметно
+# больше, поэтому корневой раздел в partitions.toml увеличен.
+
+install_recommends = false
+
+install = [
+    # init и базовая инфраструктура системы
+    "systemd",
+    "systemd-sysv",
+    "systemd-resolved",
+    "udev",
+    "dbus",
+    "kmod",
+
+    # initramfs: kernel-пакеты Armbian вызывают его hooks при установке
+    "initramfs-tools",
+
+    # файловые системы образа и расширение rootfs при первом запуске
+    "e2fsprogs",
+    "dosfstools",
+    "parted",
+
+    # сеть, включая Wi-Fi платы
+    "netplan.io",
+    "iproute2",
+    "iputils-ping",
+    "wpasupplicant",
+    "iw",
+    "rfkill",
+
+    # утилита обновления загрузчика в EEPROM платы
+    "rpi-eeprom",
+
+    # ядро Raspberry Pi и его firmware из архива Ubuntu
+    "linux-image-raspi",
+
+    # доступ и базовая эксплуатация
+    "openssh-server",
+    "sudo",
+    "ca-certificates",
+    "locales",
+    "tzdata",
+    "less",
+    "nano",
+]

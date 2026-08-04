@@ -1,0 +1,42 @@
+# Системная конфигурация образа Platinum OS.
+#
+# Учётные записи здесь намеренно отсутствуют: любой хеш пароля, попавший в
+# репозиторий, стал бы общеизвестным credential всех собранных устройств.
+# Пользователь задаётся оператором сборки — своим system.toml через
+# `--system <path>` либо правкой этого файла перед сборкой:
+#
+#   [[users]]
+#   name = "platinum"
+#   # openssl passwd -6   (хеш crypt(3); открытый пароль сборка не примет)
+#   password_hash = "$6$..."
+#   groups = ["sudo", "adm", "dialout"]
+#   # По умолчанию true: пароль придётся сменить при первом входе.
+#   force_password_change = true
+#
+# Разделы fstab появятся вместе с partitions.toml: сейчас метки разделов ещё не
+# определены, а выдуманные метки дали бы незагружаемую систему. Пока список
+# пуст, сборка не трогает существующий /etc/fstab.
+#
+# Wi-Fi не настраивается сборкой: SSID и PSK — секреты развёртывания. У Zero 3W
+# нет Ethernet, поэтому dhcp_interfaces пуст, и сеть настраивается при первом
+# запуске устройства.
+
+hostname = "platinum"
+timezone = "Etc/UTC"
+locale = "en_US.UTF-8"
+
+[network]
+dhcp_interfaces = []
+
+[boot]
+# Консоль здесь не задаётся: плата грузится boot-скриптом Armbian, а он строит
+# `console=` сам из `console=both` в config/bootenv/sun60iw2.txt и даёт ровно
+# `console=ttyS0,115200 console=tty1`. Дубль в extra_cmdline попал бы в
+# командную строку ядра вторым и разошёлся бы с upstream при его смене.
+#
+# extra_cmdline уходит в `extraboardargs` файла armbianEnv.txt, а не в
+# `extraargs`: второй занят значениями upstream.
+extra_cmdline = []
+
+# timeout_deciseconds здесь не действует: задержка меню — свойство extlinux, а
+# boot-скрипт грузится без меню.
