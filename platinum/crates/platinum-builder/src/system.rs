@@ -1,7 +1,9 @@
 use anyhow::{Context, Result};
 use platinum_board::SystemConfig;
 use platinum_core::{BuildContext, Stage};
-use platinum_rootfs::{Chroot, Filesystem, SystemConfigurator, SystemSpec, User};
+use platinum_rootfs::{
+    Chroot, Filesystem, ShellSpec, SystemConfigurator, SystemSpec, User, WifiNetwork,
+};
 
 use crate::outputs;
 
@@ -55,6 +57,7 @@ pub fn system_spec(
     config: SystemConfig,
     image_filesystems: Vec<Filesystem>,
     modules: Vec<String>,
+    config_dir: &std::path::Path,
 ) -> Result<SystemSpec> {
     let mut users = Vec::with_capacity(config.users.len());
     for user in config.users {
@@ -88,6 +91,29 @@ pub fn system_spec(
         );
     }
 
+    let mut wifi = Vec::with_capacity(config.network.wifi.len());
+    for network in config.network.wifi {
+        wifi.push(
+            WifiNetwork::new(network.ssid.clone(), network.psk, network.hidden)
+                .with_context(|| format!("некорректная сеть Wi-Fi `{}`", network.ssid))?,
+        );
+    }
+
+    let shell = match config.shell {
+        Some(shell) => Some(
+            // Путь к QML разрешается относительно файла конфигурации, как и
+            // остальные пути данных: абсолютный в репозитории был бы привязан
+            // к машине того, кто его записал.
+            ShellSpec::new(
+                shell.session.clone(),
+                shell.autologin_user,
+                shell.homescreen.map(|path| config_dir.join(path)),
+            )
+            .with_context(|| format!("некорректная оболочка `{}`", shell.session))?,
+        ),
+        None => None,
+    };
+
     let expand_rootfs = config.expand_rootfs;
 
     let spec = SystemSpec::new(config.hostname, config.timezone, config.locale)
@@ -99,7 +125,9 @@ pub fn system_spec(
         // Модули приходят из board.toml, а не из system.toml: список драйверов
         // определяется железом платы, а не политикой образа.
         .with_modules(modules)
-        .with_rootfs_expansion(expand_rootfs);
+        .with_rootfs_expansion(expand_rootfs)
+        .with_wifi(wifi)
+        .with_shell(shell);
 
     Ok(spec)
 }

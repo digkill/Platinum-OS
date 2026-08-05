@@ -171,9 +171,25 @@ disk="/dev/$(basename "$(readlink -f "$sys/..")")"
 
 echo "resize-rootfs: диск $disk, раздел $number ($part)"
 
-# parted печатает предупреждение о смонтированной ФС и растит раздел на месте;
-# ядро узнаёт новый размер через BLKPG, перезагрузка не нужна.
-parted -s -m "$disk" resizepart "$number" 100% || fail "parted не смог расширить раздел"
+# Носитель может быть ровно по размеру образа: тогда расширять нечего, и это
+# не ошибка. Без проверки parted падает, служба остаётся включённой и валится
+# при каждой загрузке — поймано запуском образа в QEMU.
+disk_name="${disk#/dev/}"
+disk_sectors=$(cat "/sys/class/block/$disk_name/size")
+part_start=$(cat "$sys/start")
+part_sectors=$(cat "$sys/size")
+free=$((disk_sectors - part_start - part_sectors))
+
+# 2048 секторов (1 МиБ) — порог: меньший хвост не стоит перестройки таблицы.
+if [ "$free" -lt 2048 ]; then
+    echo "resize-rootfs: раздел уже занимает весь носитель, расширение не требуется"
+else
+    # parted печатает предупреждение о смонтированной ФС и растит раздел на
+    # месте; ядро узнаёт новый размер через BLKPG, перезагрузка не нужна.
+    parted -s -m "$disk" resizepart "$number" 100% || fail "parted не смог расширить раздел"
+fi
+
+# resize2fs на уже максимальной ФС сообщает «Nothing to do» и выходит с нулём.
 resize2fs "$part" || fail "resize2fs не смог расширить файловую систему"
 
 echo "resize-rootfs: готово"
@@ -253,6 +269,18 @@ mod tests {
             .expect("повторная установка не должна падать");
 
         fs::remove_dir_all(root).expect("временный каталог должен удаляться");
+    }
+
+    /// Носитель по размеру образа — не ошибка, а обычный случай.
+    #[test]
+    fn treats_a_full_medium_as_nothing_to_do() {
+        assert!(
+            SCRIPT.contains("расширение не требуется"),
+            "скрипт обязан отличать «нечего расширять» от отказа"
+        );
+        let check = SCRIPT.find("free").expect("проверка свободного места");
+        let parted = SCRIPT.find("resizepart").expect("вызов parted");
+        assert!(check < parted, "свободное место проверяется до parted");
     }
 
     /// Скрипт снимает службу только после успешного расширения.

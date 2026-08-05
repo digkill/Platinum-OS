@@ -28,6 +28,15 @@ locale = "en_US.UTF-8"
 [network]
 dhcp_interfaces = []
 
+# Wi-Fi задаётся своим system.toml через `--system <path>`, а не здесь: SSID и
+# PSK — секреты развёртывания, и в репозитории им не место.
+#
+#   [[network.wifi]]
+#   ssid = "имя-сети"
+#   # PSK, а не пароль: `wpa_passphrase <ssid> <пароль>`
+#   psk = "64 шестнадцатеричных символа"
+#   # hidden = true  — если сеть не вещает SSID
+
 [boot]
 # Консоль здесь не задаётся: плата грузится boot-скриптом Armbian, а он строит
 # `console=` сам из `console=both` в config/bootenv/sun60iw2.txt и даёт ровно

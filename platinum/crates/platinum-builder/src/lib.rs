@@ -108,6 +108,7 @@ mod tests {
             filesystems: Vec::new(),
             network: NetworkConfig::default(),
             boot: BootConfig::default(),
+            shell: None,
             expand_rootfs: true,
         }
     }
@@ -310,6 +311,7 @@ mod tests {
                 packages: Some(packages),
                 system: Some(system),
                 partitions: Some(partitions),
+                config_dir: boards.clone(),
             },
         )
         .expect("данные платы должны давать корректный pipeline");
@@ -372,6 +374,7 @@ mod tests {
                 packages: Some(packages),
                 system: Some(system),
                 partitions: Some(partitions),
+                config_dir: boards.clone(),
             },
         )
         .expect("данные платы должны давать корректный pipeline");

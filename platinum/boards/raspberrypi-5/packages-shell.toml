@@ -1,0 +1,97 @@
+# Состав Platinum userspace поверх Ubuntu Base.
+#
+# Здесь только пакеты из архива Ubuntu: собственные пакеты Platinum появятся
+# отдельной секцией, когда у платформы будет свой apt-репозиторий с ключом.
+#
+# Ubuntu Base приходит со своим `sources.list`, поэтому suite и зеркало здесь не
+# переопределяются: рассинхронизация suite с базовым архивом ломает apt.
+#
+# ВАРИАНТ С ГРАФИЧЕСКОЙ ОБОЛОЧКОЙ.
+#
+# Передаётся явно: `--packages boards/raspberrypi-5/packages-shell.toml`.
+# Обычная сборка остаётся без графики, чтобы образ без экрана не тащил
+# полтора гигабайта Qt.
+#
+# Ядро приходит из архива Ubuntu, а не из BSP: linux-image-raspi — метапакет,
+# который тянет актуальную сборку ядра Pi вместе с модулями и DTB.
+#
+# Он зависит от linux-firmware, и это осознанная плата за поддержку: у Pi 5
+# Wi-Fi/BT работают на firmware из этого пакета. Образ из-за него заметно
+# больше, поэтому корневой раздел в partitions.toml увеличен.
+
+install_recommends = false
+
+install = [
+    # init и базовая инфраструктура системы
+    "systemd",
+    "systemd-sysv",
+    "systemd-resolved",
+    "udev",
+    "dbus",
+    "kmod",
+
+    # initramfs: kernel-пакеты Armbian вызывают его hooks при установке
+    "initramfs-tools",
+
+    # файловые системы образа и расширение rootfs при первом запуске
+    "e2fsprogs",
+    "dosfstools",
+    "parted",
+
+    # сеть, включая Wi-Fi платы
+    "netplan.io",
+    "iproute2",
+    "iputils-ping",
+    "wpasupplicant",
+    "iw",
+    "rfkill",
+
+    # утилита обновления загрузчика в EEPROM платы
+    "rpi-eeprom",
+
+    # ядро Raspberry Pi и его firmware из архива Ubuntu
+    "linux-image-raspi",
+
+    # графический стек: Wayland-композитор, оболочка и вход
+    #
+    # plasma-nano — минимальная оболочка Plasma; её домашний экран это
+    # QML-плазмоид, поэтому он заменяется своим без правки композитора.
+    "plasma-mobile",
+    "plasma-nano",
+    "plasma-settings",
+    "kwin-wayland",
+    "sddm",
+
+    # экранная клавиатура: на устройстве с тачем другой нет
+    "maliit-keyboard",
+
+    # собственная оболочка: композитор-киоск и runtime QML
+    #
+    # Именно `qml-qt6`, а не `qt6-declarative-dev-tools`: второй несёт qmllint,
+    # qmlformat и прочие инструменты, но самого runtime `qml` в нём нет —
+    # выяснено по индексу содержимого архива после пустой сборки.
+    "cage",
+    "qml-qt6",
+    "qml6-module-qtquick",
+    "qml6-module-qtquick-window",
+    "qml6-module-qtquick-shapes",
+    "qml6-module-qtquick-effects",
+
+    # драйверы GPU: VideoCore VII с открытым v3d/vc4, ускорение аппаратное
+    "libgl1-mesa-dri",
+    "libegl-mesa0",
+    "mesa-vulkan-drivers",
+
+    # шрифты: без них оболочка рисует пустые прямоугольники
+    "fonts-noto-core",
+    "fonts-noto-color-emoji",
+
+    # доступ и базовая эксплуатация
+    "openssh-server",
+    "sudo",
+    "ca-certificates",
+    "locales",
+    "tzdata",
+    "less",
+    "nano",
+]

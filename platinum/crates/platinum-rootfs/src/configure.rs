@@ -17,7 +17,8 @@ use tracing::{info, warn};
 use crate::{
     chroot::{Chroot, ChrootError},
     resize::{ResizeError, RootfsExpander},
-    system::{Filesystem, SystemSpec, User},
+    shell::{ShellConfigurator, ShellError},
+    system::{Filesystem, SystemSpec, User, WifiNetwork},
 };
 
 /// Файл имени устройства.
@@ -78,6 +79,9 @@ pub enum ConfigureError {
     /// Не удалось установить службу расширения корня.
     #[error(transparent)]
     Resize(ResizeError),
+    /// Не удалось включить графическую оболочку.
+    #[error(transparent)]
+    Shell(ShellError),
 }
 
 /// Применяет проверенную системную конфигурацию к rootfs.
@@ -106,6 +110,7 @@ impl SystemConfigurator {
         self.write_netplan(root)?;
         self.write_modules(root)?;
         self.install_rootfs_expansion(root)?;
+        self.enable_shell(root)?;
         write_file(
             &root.join(LOCALE_GEN_FILE),
             &render_locale_gen(&self.spec.locale, self.spec.locale_charset()),
@@ -160,6 +165,17 @@ impl SystemConfigurator {
         symlink(&target, &link).map_err(|source| ConfigureError::Write { path: link, source })
     }
 
+    /// Включает графическую оболочку, если образ её запускает.
+    fn enable_shell(&self, root: &Path) -> Result<(), ConfigureError> {
+        let Some(shell) = &self.spec.shell else {
+            return Ok(());
+        };
+
+        ShellConfigurator::new(shell.clone())
+            .apply(root)
+            .map_err(ConfigureError::Shell)
+    }
+
     /// Ставит одноразовую службу расширения корня, если она включена.
     fn install_rootfs_expansion(&self, root: &Path) -> Result<(), ConfigureError> {
         if !self.spec.expand_rootfs {
@@ -205,12 +221,15 @@ impl SystemConfigurator {
 
     /// Записывает конфигурацию netplan для интерфейсов с DHCP.
     fn write_netplan(&self, root: &Path) -> Result<(), ConfigureError> {
-        if self.spec.dhcp_interfaces.is_empty() {
+        if self.spec.dhcp_interfaces.is_empty() && self.spec.wifi.is_empty() {
             return Ok(());
         }
 
         let path = root.join(NETPLAN_FILE);
-        write_file(&path, &render_netplan(&self.spec.dhcp_interfaces))?;
+        write_file(
+            &path,
+            &render_netplan(&self.spec.dhcp_interfaces, &self.spec.wifi),
+        )?;
 
         // netplan отказывается применять конфигурацию, доступную на чтение
         // всем: файл может содержать сетевые секреты.
@@ -225,16 +244,12 @@ fn create_user(
     root: &Path,
     user: &User,
 ) -> Result<(), ConfigureError> {
-    if user_exists(root, &user.name) {
-        // Повторный запуск сборки не должен падать на уже созданном
-        // пользователе: work-dir переиспользуется между запусками.
-        info!(user = %user.name, "пользователь уже существует, создание пропущено");
-
-        return Ok(());
-    }
+    // Пользователь мог остаться от прошлой сборки: work-dir переиспользуется.
+    // Тогда его настройки приводятся к конфигурации, а не пропускаются —
+    // иначе смена пароля в `system.toml` молча не попала бы в образ.
+    let existing = user_exists(root, &user.name);
 
     let mut arguments = vec![
-        "--create-home".to_owned(),
         "--shell".to_owned(),
         user.shell.clone(),
         "--password".to_owned(),
@@ -249,12 +264,24 @@ fn create_user(
     arguments.push(user.name.clone());
 
     let borrowed: Vec<&str> = arguments.iter().map(String::as_str).collect();
-    session.run("useradd", &borrowed)?;
+
+    if existing {
+        info!(user = %user.name, "пользователь уже существует, настройки приводятся к конфигурации");
+        session.run("usermod", &borrowed)?;
+    } else {
+        let mut create = vec!["--create-home"];
+        create.extend_from_slice(&borrowed);
+        session.run("useradd", &create)?;
+    }
 
     if user.force_password_change {
         // `chage --lastday 0` заставляет сменить пароль при первом входе:
         // пароль из репозитория не должен пережить первую загрузку устройства.
         session.run("chage", &["--lastday", "0", &user.name])?;
+    } else if existing {
+        // Снятие требования тоже обязано доезжать: иначе образ, пересобранный
+        // с `force_password_change = false`, всё равно просил бы смену.
+        session.run("chage", &["--lastday", "-1", &user.name])?;
     }
 
     Ok(())
@@ -321,14 +348,38 @@ fn render_fstab(filesystems: &[Filesystem]) -> String {
 }
 
 /// Формирует конфигурацию netplan для интерфейсов с DHCP.
-fn render_netplan(interfaces: &[String]) -> String {
+fn render_netplan(interfaces: &[String], wifi: &[WifiNetwork]) -> String {
     let mut netplan = String::from(
         "# Platinum OS: файл создан сборкой, ручные правки будут перезаписаны.\n\
-         network:\n  version: 2\n  renderer: networkd\n  ethernets:\n",
+         network:\n  version: 2\n  renderer: networkd\n",
     );
 
-    for interface in interfaces {
-        netplan.push_str(&format!("    {interface}:\n      dhcp4: true\n"));
+    if !interfaces.is_empty() {
+        netplan.push_str("  ethernets:\n");
+        for interface in interfaces {
+            netplan.push_str(&format!("    {interface}:\n      dhcp4: true\n"));
+        }
+    }
+
+    if !wifi.is_empty() {
+        // Интерфейс задаётся шаблоном `wl*`, а не именем: systemd переименовывает
+        // сетевые устройства по пути в шине, и жёсткий `wlan0` разошёлся бы с
+        // фактическим именем на другой плате или после смены ядра.
+        netplan.push_str(
+            "  wifis:\n    platinum-wifi:\n      match:\n        name: \"wl*\"\n\
+             \x20     dhcp4: true\n      access-points:\n",
+        );
+
+        for network in wifi {
+            netplan.push_str(&format!("        \"{}\":\n", network.ssid));
+            // PSK, а не пароль: netplan отдаёт 64 шестнадцатеричных символа
+            // wpa_supplicant как есть, без строки с паролем в открытом виде.
+            netplan.push_str(&format!("          password: \"{}\"\n", network.psk));
+
+            if network.hidden {
+                netplan.push_str("          hidden: true\n");
+            }
+        }
     }
 
     netplan
@@ -353,6 +404,7 @@ mod tests {
     use crate::system::Filesystem;
 
     use super::{render_fstab, render_hosts, render_locale_gen, render_netplan, user_exists};
+    use crate::system::WifiNetwork;
 
     #[test]
     fn renders_hosts_with_the_device_name() {
@@ -377,9 +429,49 @@ mod tests {
         assert!(fstab.contains("LABEL=platinum-root / ext4 defaults,noatime 0 1\n"));
     }
 
+    /// PSK обязан попадать в netplan вместо пароля сети.
+    #[test]
+    fn renders_wifi_with_a_psk_and_an_interface_pattern() {
+        let network = WifiNetwork::new(
+            "test-network".into(),
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef".into(),
+            false,
+        )
+        .expect("сеть должна быть корректной");
+
+        let netplan = render_netplan(&[], &[network]);
+
+        assert!(netplan.contains("  wifis:\n"));
+        // Имя интерфейса шаблоном: systemd переименовывает устройства.
+        assert!(netplan.contains("name: \"wl*\""));
+        assert!(netplan.contains("\"test-network\":\n"));
+        assert!(netplan.contains(
+            "password: \"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\""
+        ));
+        // Без проводных интерфейсов пустая секция ethernets ломала бы netplan.
+        assert!(!netplan.contains("ethernets:"));
+    }
+
+    /// Пароль сети в открытом виде обязан отклоняться, как и пароль учётной
+    /// записи: он попал бы в образ, в лог сборки и в историю команд.
+    #[test]
+    fn rejects_a_wifi_password_in_plaintext() {
+        let error = WifiNetwork::new(
+            "test-network".into(),
+            "пароль-в-открытом-виде".into(),
+            false,
+        )
+        .expect_err("открытый пароль сети не должен приниматься");
+
+        assert!(matches!(
+            error,
+            crate::system::SystemError::PlaintextWifiPassword { .. }
+        ));
+    }
+
     #[test]
     fn renders_netplan_for_each_interface() {
-        let netplan = render_netplan(&["end0".to_owned()]);
+        let netplan = render_netplan(&["end0".to_owned()], &[]);
 
         assert!(netplan.contains("    end0:\n      dhcp4: true\n"));
         assert!(netplan.contains("renderer: networkd"));

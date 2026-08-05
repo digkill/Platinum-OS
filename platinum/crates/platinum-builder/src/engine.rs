@@ -30,6 +30,8 @@ pub struct BuildOptions {
     pub system: Option<SystemConfig>,
     /// Разметка образа, если сборка должна выпустить `.img`.
     pub partitions: Option<PartitionsConfig>,
+    /// Каталог, относительно которого разрешаются пути системной конфигурации.
+    pub config_dir: std::path::PathBuf,
 }
 
 /// Оркестратор стандартного процесса сборки Platinum OS.
@@ -132,7 +134,7 @@ impl BuildEngine {
                 None => Vec::new(),
             };
 
-            let spec = system_spec(system, filesystems, modules)
+            let spec = system_spec(system, filesystems, modules, &options.config_dir)
                 .with_context(|| format!("некорректная конфигурация системы платы `{id}`"))?;
 
             // Настройка идёт перед сборкой образа: всё, что изменено позже, в

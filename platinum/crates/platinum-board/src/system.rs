@@ -37,6 +37,9 @@ pub struct SystemConfig {
     /// Параметры загрузки.
     #[serde(default)]
     pub boot: BootConfig,
+    /// Графическая оболочка, если образ её запускает.
+    #[serde(default)]
+    pub shell: Option<ShellConfig>,
     /// Расширять ли корень на весь носитель при первом запуске.
     ///
     /// Включено по умолчанию: образ выпускается под самую маленькую карту, и
@@ -75,6 +78,26 @@ impl Default for BootConfig {
 /// Задержка меню по умолчанию: три секунды на прерывание загрузки.
 fn default_boot_timeout() -> u32 {
     30
+}
+
+/// Графическая оболочка готовой системы.
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct ShellConfig {
+    /// Имя `.desktop`-сессии Wayland, например `plasma-mobile`.
+    pub session: String,
+    /// Пользователь автоматического входа.
+    ///
+    /// Без него устройство с сенсорным экраном упирается в экран логина, на
+    /// котором нечем набрать пароль.
+    #[serde(default)]
+    pub autologin_user: Option<String>,
+    /// Каталог QML собственного домашнего экрана.
+    ///
+    /// Путь относительный к файлу конфигурации, как и остальные пути данных.
+    /// Пусто — образ использует оболочку из пакета, без своей.
+    #[serde(default)]
+    pub homescreen: Option<String>,
 }
 
 /// Учётная запись готовой системы.
@@ -124,12 +147,35 @@ pub struct FilesystemConfig {
 #[derive(Debug, Clone, Default, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub struct NetworkConfig {
-    /// Интерфейсы, получающие адрес по DHCP.
-    ///
-    /// Wi-Fi здесь намеренно отсутствует: SSID и PSK — секреты развёртывания,
-    /// которым не место в конфигурации, лежащей в репозитории.
+    /// Проводные интерфейсы, получающие адрес по DHCP.
     #[serde(default)]
     pub dhcp_interfaces: Vec<String>,
+    /// Сети Wi-Fi, к которым подключается устройство.
+    ///
+    /// В репозитории этот список пуст: SSID и PSK — секреты развёртывания.
+    /// Задаётся своим `system.toml` через `--system <path>`, как и пароли.
+    #[serde(default)]
+    pub wifi: Vec<WifiConfig>,
+}
+
+/// Одна сеть Wi-Fi.
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct WifiConfig {
+    /// Имя сети.
+    pub ssid: String,
+    /// PSK — 64 шестнадцатеричных символа.
+    ///
+    /// Открытый пароль сборка не принимает, как и у учётных записей. PSK
+    /// считается из SSID и пароля, поэтому пароль сети в файле не появляется:
+    ///
+    /// ```sh
+    /// wpa_passphrase <ssid> <пароль>
+    /// ```
+    pub psk: String,
+    /// Скрыта ли сеть (не вещает SSID).
+    #[serde(default)]
+    pub hidden: bool,
 }
 
 /// Значение по умолчанию для булевых полей, включённых по умолчанию.

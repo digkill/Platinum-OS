@@ -1,0 +1,10 @@
+module Platinum
+singleton Theme 1.0 Theme.qml
+GlassPanel 1.0 GlassPanel.qml
+StatusBar 1.0 StatusBar.qml
+ClockWidget 1.0 ClockWidget.qml
+PlatinumLogo 1.0 PlatinumLogo.qml
+AppIcon 1.0 AppIcon.qml
+AppGrid 1.0 AppGrid.qml
+FocusCard 1.0 FocusCard.qml
+Dock 1.0 Dock.qml

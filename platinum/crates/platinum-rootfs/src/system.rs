@@ -80,6 +80,53 @@ pub enum SystemError {
         /// Отклонённое значение.
         interface: String,
     },
+    /// Имя сети Wi-Fi попадает в netplan строкой в кавычках.
+    #[error("недопустимое имя сети Wi-Fi `{ssid}`")]
+    InvalidSsid {
+        /// Отклонённое значение.
+        ssid: String,
+    },
+    /// Пароль сети в открытом виде оказался бы в образе и в истории сборки.
+    #[error(
+        "для сети `{ssid}` нужен PSK из 64 шестнадцатеричных символов, а не пароль; \
+         посчитайте его командой `wpa_passphrase {ssid} <пароль>`"
+    )]
+    PlaintextWifiPassword {
+        /// Сеть с некорректным ключом.
+        ssid: String,
+    },
+}
+
+/// Сеть Wi-Fi готовой системы.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WifiNetwork {
+    /// Имя сети.
+    pub ssid: String,
+    /// PSK — 64 шестнадцатеричных символа.
+    pub psk: String,
+    /// Скрыта ли сеть.
+    pub hidden: bool,
+}
+
+impl WifiNetwork {
+    /// Создаёт проверенное описание сети.
+    ///
+    /// PSK принимается только в виде хеша: открытый пароль сети попал бы в
+    /// образ, в логи сборки и в историю команд, а сеть у пользователя обычно
+    /// одна на всё вокруг.
+    pub fn new(ssid: String, psk: String, hidden: bool) -> Result<Self, SystemError> {
+        // SSID уходит в YAML ключом в кавычках: кавычка или перевод строки
+        // сломали бы файл, и netplan молча не применил бы конфигурацию.
+        if ssid.is_empty() || ssid.len() > 32 || ssid.contains(['"', '\n', '\r', '\\']) {
+            return Err(SystemError::InvalidSsid { ssid });
+        }
+
+        if psk.len() != 64 || !psk.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+            return Err(SystemError::PlaintextWifiPassword { ssid });
+        }
+
+        Ok(Self { ssid, psk, hidden })
+    }
 }
 
 /// Учётная запись, создаваемая в готовой системе.
@@ -215,6 +262,10 @@ pub struct SystemSpec {
     pub modules: Vec<String>,
     /// Расширять ли корень на весь носитель при первом запуске.
     pub expand_rootfs: bool,
+    /// Сети Wi-Fi, к которым подключается устройство.
+    pub wifi: Vec<WifiNetwork>,
+    /// Графическая оболочка, если образ её запускает.
+    pub shell: Option<crate::shell::ShellSpec>,
 }
 
 impl SystemSpec {
@@ -241,12 +292,28 @@ impl SystemSpec {
             dhcp_interfaces: Vec::new(),
             modules: Vec::new(),
             expand_rootfs: false,
+            wifi: Vec::new(),
+            shell: None,
         })
     }
 
     /// Добавляет модули ядра, загружаемые при старте.
     pub fn with_modules(mut self, modules: Vec<String>) -> Self {
         self.modules = modules;
+
+        self
+    }
+
+    /// Включает графическую оболочку.
+    pub fn with_shell(mut self, shell: Option<crate::shell::ShellSpec>) -> Self {
+        self.shell = shell;
+
+        self
+    }
+
+    /// Добавляет сети Wi-Fi.
+    pub fn with_wifi(mut self, wifi: Vec<WifiNetwork>) -> Self {
+        self.wifi = wifi;
 
         self
     }

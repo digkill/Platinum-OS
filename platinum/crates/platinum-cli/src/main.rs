@@ -117,6 +117,15 @@ fn main() -> Result<()> {
 /// Запускает pipeline сборки образа для указанной платы.
 fn run_build(arguments: BuildArgs) -> Result<()> {
     let board = load_board(&arguments.board)?;
+    // Относительные пути системной конфигурации разрешаются от неё самой, а не
+    // от текущего каталога: иначе результат зависел бы от места запуска.
+    let config_dir = arguments
+        .system
+        .as_deref()
+        .unwrap_or(arguments.board.as_path())
+        .parent()
+        .unwrap_or(Path::new("."))
+        .to_path_buf();
     let packages = load_packages(&arguments)?;
     let system = load_system(&arguments)?;
     let partitions = load_partitions(&arguments)?;
@@ -137,6 +146,7 @@ fn run_build(arguments: BuildArgs) -> Result<()> {
             packages,
             system,
             partitions,
+            config_dir,
         },
     )
     .context("не удалось построить pipeline сборки")?;
