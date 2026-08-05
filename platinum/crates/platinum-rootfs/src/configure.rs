@@ -378,15 +378,18 @@ fn render_netplan(interfaces: &[String], wifi: &[WifiNetwork]) -> String {
     }
 
     if !wifi.is_empty() {
-        // Интерфейс задаётся шаблоном `wl*`, а не именем: systemd переименовывает
-        // сетевые устройства по пути в шине, и жёсткий `wlan0` разошёлся бы с
-        // фактическим именем на другой плате или после смены ядра.
-        netplan.push_str(
-            "  wifis:\n    platinum-wifi:\n      match:\n        name: \"wl*\"\n\
-             \x20     dhcp4: true\n      access-points:\n",
-        );
+        // Интерфейс задаётся именем, а не шаблоном `match:`. Шаблон выглядит
+        // надёжнее, но backend networkd отказывается его применять — «does not
+        // support wifi with match:, only by interface name» — и роняет весь
+        // `netplan generate`, а вместе с ним локальную стадию cloud-init.
+        // Поймано запуском образа в QEMU.
+        netplan.push_str("  wifis:\n");
 
         for network in wifi {
+            netplan.push_str(&format!(
+                "    {}:\n      dhcp4: true\n      access-points:\n",
+                network.interface
+            ));
             netplan.push_str(&format!("        \"{}\":\n", network.ssid));
             // PSK, а не пароль: netplan отдаёт 64 шестнадцатеричных символа
             // wpa_supplicant как есть, без строки с паролем в открытом виде.
@@ -452,14 +455,16 @@ mod tests {
             "test-network".into(),
             "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef".into(),
             false,
+            "wlan0".into(),
         )
         .expect("сеть должна быть корректной");
 
         let netplan = render_netplan(&[], &[network]);
 
         assert!(netplan.contains("  wifis:\n"));
-        // Имя интерфейса шаблоном: systemd переименовывает устройства.
-        assert!(netplan.contains("name: \"wl*\""));
+        // Имя интерфейса, а не match: networkd отвергает match для Wi-Fi.
+        assert!(netplan.contains("    wlan0:\n"));
+        assert!(!netplan.contains("match:"));
         assert!(netplan.contains("\"test-network\":\n"));
         assert!(netplan.contains(
             "password: \"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\""
@@ -476,6 +481,7 @@ mod tests {
             "test-network".into(),
             "пароль-в-открытом-виде".into(),
             false,
+            "wlan0".into(),
         )
         .expect_err("открытый пароль сети не должен приниматься");
 

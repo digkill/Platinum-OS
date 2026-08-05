@@ -106,6 +106,8 @@ pub struct WifiNetwork {
     pub psk: String,
     /// Скрыта ли сеть.
     pub hidden: bool,
+    /// Имя беспроводного интерфейса.
+    pub interface: String,
 }
 
 impl WifiNetwork {
@@ -114,7 +116,16 @@ impl WifiNetwork {
     /// PSK принимается только в виде хеша: открытый пароль сети попал бы в
     /// образ, в логи сборки и в историю команд, а сеть у пользователя обычно
     /// одна на всё вокруг.
-    pub fn new(ssid: String, psk: String, hidden: bool) -> Result<Self, SystemError> {
+    pub fn new(
+        ssid: String,
+        psk: String,
+        hidden: bool,
+        interface: String,
+    ) -> Result<Self, SystemError> {
+        if !is_valid_interface(&interface) {
+            return Err(SystemError::InvalidInterface { interface });
+        }
+
         // SSID уходит в YAML ключом в кавычках: кавычка или перевод строки
         // сломали бы файл, и netplan молча не применил бы конфигурацию.
         if ssid.is_empty() || ssid.len() > 32 || ssid.contains(['"', '\n', '\r', '\\']) {
@@ -125,7 +136,12 @@ impl WifiNetwork {
             return Err(SystemError::PlaintextWifiPassword { ssid });
         }
 
-        Ok(Self { ssid, psk, hidden })
+        Ok(Self {
+            ssid,
+            psk,
+            hidden,
+            interface,
+        })
     }
 }
 

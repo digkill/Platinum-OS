@@ -8,7 +8,7 @@ Item {
     Loader {
         id: loader
         anchors.fill: parent
-        source: "Home.qml"
+        source: "../homescreen/Home.qml"
         onLoaded: grab.start()
     }
 

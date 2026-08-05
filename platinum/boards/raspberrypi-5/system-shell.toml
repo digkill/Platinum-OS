@@ -43,6 +43,8 @@ homescreen = "../../shell/homescreen"
 # когда включена «OS customisation».
 [cloud_init]
 seed_directory = "/boot/firmware"
+# Метка FAT-раздела из partitions.toml: по ней cloud-init монтирует раздел сам.
+filesystem_label = "PLTMBOOT"
 
 [boot]
 # У прошивки Pi нет собственного построителя `console=`, поэтому консоль

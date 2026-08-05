@@ -94,8 +94,13 @@ pub fn system_spec(
     let mut wifi = Vec::with_capacity(config.network.wifi.len());
     for network in config.network.wifi {
         wifi.push(
-            WifiNetwork::new(network.ssid.clone(), network.psk, network.hidden)
-                .with_context(|| format!("некорректная сеть Wi-Fi `{}`", network.ssid))?,
+            WifiNetwork::new(
+                network.ssid.clone(),
+                network.psk,
+                network.hidden,
+                network.interface,
+            )
+            .with_context(|| format!("некорректная сеть Wi-Fi `{}`", network.ssid))?,
         );
     }
 
@@ -116,7 +121,7 @@ pub fn system_spec(
 
     let cloud_init = match config.cloud_init {
         Some(cloud_init) => Some(
-            CloudInitSpec::new(cloud_init.seed_directory)
+            CloudInitSpec::new(cloud_init.seed_directory, cloud_init.filesystem_label)
                 .context("некорректная настройка первой загрузки")?,
         ),
         None => None,

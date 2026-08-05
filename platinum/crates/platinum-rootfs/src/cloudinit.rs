@@ -43,6 +43,12 @@ pub enum CloudInitError {
         /// Отклонённое значение.
         directory: String,
     },
+    /// Метка попадает в конфигурацию и обязана быть непустой.
+    #[error("недопустимая метка файловой системы seed `{label}`")]
+    InvalidLabel {
+        /// Отклонённое значение.
+        label: String,
+    },
     /// Файл не удалось записать.
     #[error("не удалось записать `{path}`: {source}")]
     Write {
@@ -57,23 +63,35 @@ pub enum CloudInitError {
 /// Параметры первой загрузки.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CloudInitSpec {
-    /// Каталог целевой системы, из которого читается `user-data`.
-    ///
-    /// Обязан лежать на разделе, который видно с чужой машины: смысл в том,
-    /// чтобы править настройки после записи образа, не загружая устройство.
+    /// Каталог целевой системы, куда сборка кладёт `user-data`.
     pub seed_directory: String,
+    /// Метка файловой системы, на которой лежит seed.
+    ///
+    /// По ней cloud-init находит и монтирует раздел сам. Это единственный
+    /// работающий способ: поиск идёт на локальной стадии, за секунды до того,
+    /// как раздел смонтирует fstab, и любой путь оказывается пуст.
+    pub filesystem_label: String,
 }
 
 impl CloudInitSpec {
     /// Создаёт проверенное описание.
-    pub fn new(seed_directory: String) -> Result<Self, CloudInitError> {
+    pub fn new(seed_directory: String, filesystem_label: String) -> Result<Self, CloudInitError> {
         if !seed_directory.starts_with('/') {
             return Err(CloudInitError::RelativeSeedDirectory {
                 directory: seed_directory,
             });
         }
 
-        Ok(Self { seed_directory })
+        if filesystem_label.is_empty() || filesystem_label.contains(char::is_whitespace) {
+            return Err(CloudInitError::InvalidLabel {
+                label: filesystem_label,
+            });
+        }
+
+        Ok(Self {
+            seed_directory,
+            filesystem_label,
+        })
     }
 }
 
@@ -133,6 +151,16 @@ fn write(path: &Path, contents: &str) -> Result<(), CloudInitError> {
 
 /// Формирует drop-in конфигурацию cloud-init.
 ///
+/// Раздел задаётся меткой, а не путём. Путь не работает принципиально: NoCloud
+/// ищет seed на локальной стадии, за секунды до того, как fstab смонтирует
+/// загрузочный раздел, и любой каталог оказывается пуст — а результат поиска
+/// кэшируется. По метке cloud-init монтирует раздел сам и от порядка загрузки
+/// не зависит.
+///
+/// `seedfrom` тоже отпал: он принимает только сетевые схемы, и голый путь, и
+/// `file://` отвергаются с «only uses seeds starting with http/https/ftp/ftps».
+/// Все три варианта проверены запуском образа в QEMU.
+///
 /// `users: []` обязателен: без него cloud-init заводит учётную запись дистрибутива
 /// по умолчанию, и в образе появился бы лишний пользователь `ubuntu` рядом с
 /// созданным сборкой. Значение перекрывается из `user-data`, если оператор
@@ -146,10 +174,10 @@ fn render_config(spec: &CloudInitSpec) -> String {
          datasource_list: [NoCloud, None]\n\
          datasource:\n\
          \x20 NoCloud:\n\
-         \x20   seedfrom: {}/\n\
+         \x20   fs_label: {}\n\
          users: []\n\
          disable_root: true\n",
-        spec.seed_directory
+        spec.filesystem_label
     )
 }
 
@@ -203,19 +231,23 @@ mod tests {
 
     #[test]
     fn points_the_datasource_at_the_boot_partition() {
-        let spec = CloudInitSpec::new("/boot/firmware".into()).expect("корректный путь");
+        let spec = CloudInitSpec::new("/boot/firmware".into(), "PLTMBOOT".into())
+            .expect("корректное описание");
 
         let config = render_config(&spec);
 
         assert!(config.contains("datasource_list: [NoCloud, None]\n"));
-        assert!(config.contains("seedfrom: /boot/firmware/\n"));
+        // Метка, а не путь: путь читается раньше монтирования раздела.
+        assert!(config.contains("fs_label: PLTMBOOT\n"));
+        assert!(!config.contains("seedfrom"));
     }
 
     /// Без `users: []` cloud-init заводит учётную запись дистрибутива, и рядом с
     /// пользователем сборки появился бы лишний `ubuntu`.
     #[test]
     fn suppresses_the_default_distribution_user() {
-        let spec = CloudInitSpec::new("/boot/firmware".into()).expect("корректный путь");
+        let spec = CloudInitSpec::new("/boot/firmware".into(), "PLTMBOOT".into())
+            .expect("корректное описание");
 
         assert!(render_config(&spec).contains("users: []\n"));
     }
@@ -240,7 +272,7 @@ mod tests {
 
     #[test]
     fn rejects_a_relative_seed_directory() {
-        let error = CloudInitSpec::new("boot/firmware".into())
+        let error = CloudInitSpec::new("boot/firmware".into(), "PLTMBOOT".into())
             .expect_err("относительный путь должен отклоняться");
 
         assert!(matches!(

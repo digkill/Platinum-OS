@@ -87,11 +87,13 @@ fn default_boot_timeout() -> u32 {
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub struct CloudInitConfig {
-    /// Каталог целевой системы, из которого читается `user-data`.
-    ///
-    /// Обязан лежать на разделе, видимом с чужой машины: смысл в том, чтобы
-    /// править настройки после записи образа, не загружая устройство.
+    /// Каталог целевой системы, куда сборка кладёт `user-data`.
     pub seed_directory: String,
+    /// Метка файловой системы, на которой лежит seed.
+    ///
+    /// По ней cloud-init находит и монтирует раздел сам. Путь для этого не
+    /// годится: поиск идёт раньше, чем fstab монтирует раздел.
+    pub filesystem_label: String,
 }
 
 /// Графическая оболочка готовой системы.
@@ -190,6 +192,17 @@ pub struct WifiConfig {
     /// Скрыта ли сеть (не вещает SSID).
     #[serde(default)]
     pub hidden: bool,
+    /// Имя беспроводного интерфейса.
+    ///
+    /// Задаётся явно, а не шаблоном: backend networkd отказывается применять
+    /// конфигурацию Wi-Fi с `match:` и роняет весь `netplan generate`.
+    #[serde(default = "default_wifi_interface")]
+    pub interface: String,
+}
+
+/// Имя беспроводного интерфейса по умолчанию.
+fn default_wifi_interface() -> String {
+    "wlan0".to_owned()
 }
 
 /// Значение по умолчанию для булевых полей, включённых по умолчанию.
