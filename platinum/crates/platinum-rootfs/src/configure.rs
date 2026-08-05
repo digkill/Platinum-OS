@@ -16,6 +16,7 @@ use tracing::{info, warn};
 
 use crate::{
     chroot::{Chroot, ChrootError},
+    cloudinit::{CloudInitConfigurator, CloudInitError},
     resize::{ResizeError, RootfsExpander},
     shell::{ShellConfigurator, ShellError},
     system::{Filesystem, SystemSpec, User, WifiNetwork},
@@ -82,6 +83,9 @@ pub enum ConfigureError {
     /// Не удалось включить графическую оболочку.
     #[error(transparent)]
     Shell(ShellError),
+    /// Не удалось включить настройку первой загрузки.
+    #[error(transparent)]
+    CloudInit(CloudInitError),
 }
 
 /// Применяет проверенную системную конфигурацию к rootfs.
@@ -111,6 +115,7 @@ impl SystemConfigurator {
         self.write_modules(root)?;
         self.install_rootfs_expansion(root)?;
         self.enable_shell(root)?;
+        self.enable_cloud_init(root)?;
         write_file(
             &root.join(LOCALE_GEN_FILE),
             &render_locale_gen(&self.spec.locale, self.spec.locale_charset()),
@@ -163,6 +168,17 @@ impl SystemConfigurator {
         // пока rootfs ещё не смонтирован как корень.
         let target = format!("../{ZONEINFO_DIRECTORY}/{}", self.spec.timezone);
         symlink(&target, &link).map_err(|source| ConfigureError::Write { path: link, source })
+    }
+
+    /// Включает настройку первой загрузки, если она объявлена.
+    fn enable_cloud_init(&self, root: &Path) -> Result<(), ConfigureError> {
+        let Some(spec) = &self.spec.cloud_init else {
+            return Ok(());
+        };
+
+        CloudInitConfigurator::new(spec.clone())
+            .apply(root)
+            .map_err(ConfigureError::CloudInit)
     }
 
     /// Включает графическую оболочку, если образ её запускает.

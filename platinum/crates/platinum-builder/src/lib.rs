@@ -109,6 +109,7 @@ mod tests {
             network: NetworkConfig::default(),
             boot: BootConfig::default(),
             shell: None,
+            cloud_init: None,
             expand_rootfs: true,
         }
     }

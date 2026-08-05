@@ -40,6 +40,9 @@ pub struct SystemConfig {
     /// Графическая оболочка, если образ её запускает.
     #[serde(default)]
     pub shell: Option<ShellConfig>,
+    /// Настройка первой загрузки через cloud-init.
+    #[serde(default)]
+    pub cloud_init: Option<CloudInitConfig>,
     /// Расширять ли корень на весь носитель при первом запуске.
     ///
     /// Включено по умолчанию: образ выпускается под самую маленькую карту, и
@@ -78,6 +81,17 @@ impl Default for BootConfig {
 /// Задержка меню по умолчанию: три секунды на прерывание загрузки.
 fn default_boot_timeout() -> u32 {
     30
+}
+
+/// Настройка образа при первой загрузке.
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct CloudInitConfig {
+    /// Каталог целевой системы, из которого читается `user-data`.
+    ///
+    /// Обязан лежать на разделе, видимом с чужой машины: смысл в том, чтобы
+    /// править настройки после записи образа, не загружая устройство.
+    pub seed_directory: String,
 }
 
 /// Графическая оболочка готовой системы.

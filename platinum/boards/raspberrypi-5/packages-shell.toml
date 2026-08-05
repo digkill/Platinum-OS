@@ -86,6 +86,10 @@ install = [
     "fonts-noto-core",
     "fonts-noto-color-emoji",
 
+    # настройка первой загрузки с загрузочного раздела; тот же механизм
+    # использует «OS customisation» в Raspberry Pi Imager
+    "cloud-init",
+
     # доступ и базовая эксплуатация
     "openssh-server",
     "sudo",

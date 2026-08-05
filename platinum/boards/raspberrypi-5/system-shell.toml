@@ -38,6 +38,12 @@ autologin_user = "platinum"
 # Путь относительно этого файла.
 homescreen = "../../shell/homescreen"
 
+# Настройка после записи образа, без пересборки: файлы лежат на FAT-разделе,
+# который монтируется и в macOS, и в Windows. Сюда же пишет Raspberry Pi Imager,
+# когда включена «OS customisation».
+[cloud_init]
+seed_directory = "/boot/firmware"
+
 [boot]
 # У прошивки Pi нет собственного построителя `console=`, поэтому консоль
 # задаётся здесь и уходит в cmdline.txt как есть.

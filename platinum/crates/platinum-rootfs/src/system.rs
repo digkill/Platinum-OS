@@ -266,6 +266,8 @@ pub struct SystemSpec {
     pub wifi: Vec<WifiNetwork>,
     /// Графическая оболочка, если образ её запускает.
     pub shell: Option<crate::shell::ShellSpec>,
+    /// Настройка первой загрузки, если образ её поддерживает.
+    pub cloud_init: Option<crate::cloudinit::CloudInitSpec>,
 }
 
 impl SystemSpec {
@@ -294,12 +296,20 @@ impl SystemSpec {
             expand_rootfs: false,
             wifi: Vec::new(),
             shell: None,
+            cloud_init: None,
         })
     }
 
     /// Добавляет модули ядра, загружаемые при старте.
     pub fn with_modules(mut self, modules: Vec<String>) -> Self {
         self.modules = modules;
+
+        self
+    }
+
+    /// Включает настройку первой загрузки.
+    pub fn with_cloud_init(mut self, cloud_init: Option<crate::cloudinit::CloudInitSpec>) -> Self {
+        self.cloud_init = cloud_init;
 
         self
     }

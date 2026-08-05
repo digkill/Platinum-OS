@@ -19,7 +19,8 @@ pub use firmware::{FIRMWARE_DIRECTORY, FirmwareConfig};
 pub use packages::PackagesConfig;
 pub use partitions::{PartitionConfig, PartitionsConfig};
 pub use system::{
-    BootConfig, FilesystemConfig, NetworkConfig, ShellConfig, SystemConfig, UserConfig, WifiConfig,
+    BootConfig, CloudInitConfig, FilesystemConfig, NetworkConfig, ShellConfig, SystemConfig,
+    UserConfig, WifiConfig,
 };
 
 /// Ошибки чтения или разбора board.toml.
