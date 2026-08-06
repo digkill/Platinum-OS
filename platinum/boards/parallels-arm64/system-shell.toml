@@ -21,7 +21,7 @@
 # настраивается: SSID и PSK — секреты развёртывания.
 
 hostname = "platinum-vm"
-timezone = "Etc/UTC"
+timezone = "Asia/Yekaterinburg"
 locale = "en_US.UTF-8"
 
 [network]

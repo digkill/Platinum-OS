@@ -159,38 +159,28 @@ fn render_theme() -> String {
 
 /// Формирует скрипт отрисовки.
 ///
-/// Масштаб считается от размера экрана, а не задаётся в пикселях: одна и та же
-/// тема показывается и на портретной панели устройства, и на HDMI-мониторе, а
-/// логотип в исходнике заведомо крупнее обоих.
+/// Скрипт намеренно вырожденный: ни функций, ни циклов, ни обратных вызовов.
+/// Каждая попытка добавить хоть что-то — вычисление размера от
+/// `Window.GetWidth()`, поток сообщений через `Image.Text`, обновление по
+/// таймеру — заканчивалась молчаливым откатом Plymouth на тему `details`, то
+/// есть текстовым списком служб вместо заставки. Ошибку Plymouth не печатает,
+/// поэтому каждая проверка стоит полной пересборки образа.
+///
+/// Поток служебных сообщений синим неоном внизу экрана пока не реализован по
+/// той же причине: его нужно отлаживать на живой машине через
+/// `shell/tools/dev-disk.sh`, а не вслепую.
 fn render_script(background: &str) -> String {
     let (red, green, blue) = parse_color(background);
 
     format!(
         "# Platinum OS: файл создан сборкой, ручные правки будут перезаписаны.\n\
-         \n\
          Window.SetBackgroundTopColor({red:.3}, {green:.3}, {blue:.3});\n\
          Window.SetBackgroundBottomColor({red:.3}, {green:.3}, {blue:.3});\n\
          \n\
          logo.image = Image(\"{LOGO_FILE}\");\n\
-         \n\
-         # Логотип занимает половину меньшей стороны экрана.\n\
-         side = Window.GetWidth();\n\
-         if (Window.GetHeight() < side) side = Window.GetHeight();\n\
-         target = side / 2;\n\
-         \n\
-         logo.scaled = logo.image.Scale(target, target);\n\
-         logo.sprite = Sprite(logo.scaled);\n\
-         logo.sprite.SetX(Window.GetWidth() / 2 - target / 2);\n\
-         logo.sprite.SetY(Window.GetHeight() / 2 - target / 2);\n\
-         \n\
-         # Пульсация вместо полосы прогресса: этапов загрузки Plymouth не знает,\n\
-         # а неподвижная картинка читается как зависший экран.\n\
-         fun refresh() {{\n\
-         \x20   logo.sprite.SetOpacity(0.75 + 0.25 * Math.Sin(progress / 12));\n\
-         \x20   progress++;\n\
-         }}\n\
-         progress = 0;\n\
-         Plymouth.SetRefreshFunction(refresh);\n"
+         logo.sprite = Sprite(logo.image);\n\
+         logo.sprite.SetX(240);\n\
+         logo.sprite.SetY(100);\n"
     )
 }
 
@@ -222,18 +212,19 @@ mod tests {
         assert!(theme.contains("ImageDir=/usr/share/plymouth/themes/platinum\n"));
     }
 
-    /// Размер логотипа обязан считаться от экрана: тема одна, а разрешения
-    /// разные — от портретной панели до HDMI-монитора.
+    /// Скрипт обязан оставаться простым: сложные конструкции Plymouth не
+    /// разбирает и молча уходит на текстовую тему `details`.
     #[test]
-    fn scales_the_logo_to_the_screen() {
-        let script = render_script("#c9c6ee");
+    fn stays_within_constructs_plymouth_parses() {
+        let script = render_script("#000000");
 
-        assert!(script.contains("Window.GetWidth()"));
-        assert!(script.contains("logo.image.Scale(target, target)"));
-        assert!(
-            !script.contains("Scale(1024"),
-            "размер не должен быть жёстким"
-        );
+        assert!(script.contains("Sprite(logo.image)"));
+        // Всё перечисленное Plymouth не разобрал и молча уходил на тему
+        // `details` — текстовый список служб вместо заставки.
+        assert!(!script.contains("fun "));
+        assert!(!script.contains("for ("));
+        assert!(!script.contains("Image.Text("));
+        assert!(!script.contains(").Scale("));
     }
 
     #[test]

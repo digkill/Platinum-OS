@@ -23,13 +23,17 @@ Rectangle {
     readonly property int designWidth: 720
     readonly property int designHeight: 1280
 
-    // Оболочка портретная по своей природе. На ландшафтном экране — а это
-    // любой обычный HDMI-монитор — холст разворачивается, а не растягивается:
-    // растянутая раскладка ломается, проверено в QEMU на 1920x1080.
-    //
-    // Монитор при этом ставится вертикально; на портретной панели устройства
-    // поворот не нужен и не применяется.
-    readonly property bool rotated: width > height
+    // Ориентация определяется экраном и меняется на лету: свойства width и
+    // height — привязки, поэтому смена разрешения или поворот панели
+    // пересобирают раскладку сами, без перезапуска оболочки.
+    readonly property bool landscape: width > height
+
+    // Как вести себя на ландшафтном экране:
+    //   "adapt"  — своя горизонтальная раскладка (по умолчанию)
+    //   "rotate" — развернуть портретную; для панели, установленной боком
+    property string landscapeMode: "adapt"
+
+    readonly property bool rotated: landscape && landscapeMode === "rotate"
 
     // Фон: мягкий градиент, поверх которого «стекло» читается без размытия.
     gradient: Gradient {
@@ -50,17 +54,20 @@ Rectangle {
     Item {
         id: canvas
 
-        width: home.designWidth
-        height: home.designHeight
+        // В режиме adapt холст занимает экран целиком и раскладка строится по
+        // его пропорции. В режиме rotate он остаётся портретным и
+        // разворачивается, поэтому размер фиксирован.
+        width: home.rotated ? home.designWidth : home.width
+        height: home.rotated ? home.designHeight : home.height
         anchors.centerIn: parent
         rotation: home.rotated ? 90 : 0
 
-        // Вписываем по меньшей стороне: пропорция сохраняется, поля остаются
-        // залитыми фоном родителя. При повороте стороны экрана меняются
-        // местами, иначе холст вылез бы за края.
         scale: home.rotated
                ? Math.min(home.width / height, home.height / width)
-               : Math.min(home.width / width, home.height / height)
+               : 1
+
+        // Раскладка внутри холста: горизонтальная только когда он сам широкий.
+        readonly property bool wide: width > height
 
         StatusBar {
             id: status
