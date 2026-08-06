@@ -9,6 +9,8 @@ Grid {
 
     property alias model: repeater.model
 
+    signal launch(string id)
+
     columns: Theme.gridColumns
     // Подпись занимает место под плиткой, поэтому рядам нужен свой интервал.
     rowSpacing: Theme.spacingMedium
@@ -19,7 +21,7 @@ Grid {
 
         AppIcon {
             width: grid.width / grid.columns
-            label: modelData.label
+            label: modelData.title !== undefined ? modelData.title : modelData.label
             glyph: modelData.glyph !== undefined ? modelData.glyph : ""
             icon: modelData.icon !== undefined ? modelData.icon : ""
             glyphColor: modelData.color !== undefined ? modelData.color : Theme.accent

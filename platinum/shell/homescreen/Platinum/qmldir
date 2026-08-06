@@ -2,6 +2,8 @@ module Platinum
 singleton Theme 1.0 Theme.qml
 singleton DeviceState 1.0 DeviceState.qml
 singleton Store 1.0 Store.qml
+singleton Apps 1.0 Apps.qml
+singleton Navigation 1.0 Navigation.qml
 GlassPanel 1.0 GlassPanel.qml
 StatusBar 1.0 StatusBar.qml
 ClockWidget 1.0 ClockWidget.qml

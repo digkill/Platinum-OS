@@ -42,7 +42,9 @@ GlassPanel {
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: console.log("док:", modelData.label)
+                    onClicked: modelData.id === "apps"
+                               ? Navigation.show("apps")
+                               : Navigation.open(modelData.id)
                 }
             }
         }
