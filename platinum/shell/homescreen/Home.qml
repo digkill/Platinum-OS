@@ -69,63 +69,83 @@ Rectangle {
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
+        }
+
+        // Сцена между строкой состояния и доком. Поверхности и приложения
+        // делят её целиком, поэтому каждая занимает всё место и переключается
+        // видимостью, а не пересчётом привязок.
+        Item {
+            id: stage
+
+            anchors.top: status.bottom
+            anchors.bottom: dock.top
+            anchors.bottomMargin: Theme.spacingMedium
+            anchors.left: parent.left
+            anchors.right: parent.right
+
+            Item {
+                id: homeSurface
+
+                anchors.fill: parent
+                visible: !Navigation.inApp && Navigation.surface === "home"
+
+                ClockWidget {
+                    id: clock
+                    anchors.top: parent.top
+                    anchors.topMargin: 56
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    now: home.now
+                }
+
+                PlatinumLogo {
+                    id: logo
+                    anchors.top: clock.bottom
+                    anchors.topMargin: 28
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: 300
+                    height: 260
+                }
+
+                AppGrid {
+                    id: apps
+                    anchors.top: logo.bottom
+                    anchors.topMargin: 24
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.leftMargin: Theme.screenMargin
+                    anchors.rightMargin: Theme.screenMargin
+
+                    // Состав приходит из реестра: домашний экран, список
+                    // приложений и док обязаны показывать один набор.
+                    model: Apps.modules
+                    onLaunch: function (id) { Navigation.open(id); }
+                }
+
+                FocusCard {
+                    id: focus
+                    anchors.top: apps.bottom
+                    anchors.topMargin: 26
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.leftMargin: Theme.screenMargin
+                    anchors.rightMargin: Theme.screenMargin
+                }
             }
 
-        ClockWidget {
-            id: clock
-            anchors.top: status.bottom
-            anchors.topMargin: 56
-            anchors.horizontalCenter: parent.horizontalCenter
-            now: home.now
-        }
+            AppsScreen {
+                anchors.fill: parent
+                visible: !Navigation.inApp && Navigation.surface === "apps"
+            }
 
-        PlatinumLogo {
-            id: logo
-            anchors.top: clock.bottom
-            anchors.topMargin: 28
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: 300
-            height: 260
-        }
-
-        AppGrid {
-            id: apps
-            anchors.top: logo.bottom
-            anchors.topMargin: 24
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.leftMargin: Theme.screenMargin
-            anchors.rightMargin: Theme.screenMargin
-
-            model: [
-                { label: "Calendar", icon: "calendar-home",     glyph: "\u{1F4C5}" },
-                { label: "Clock", icon: "clock-home",        glyph: "\u{1F551}" },
-                { label: "Contacts", icon: "contacts-home",     glyph: "\u{1F464}" },
-                { label: "Platinum OS", icon: "platinum-one-home",  glyph: "◎",    color: Theme.accentSoft },
-
-                { label: "AI Assistant", icon: "ai-home", glyph: "●",    color: Theme.accent },
-                { label: "Messages", icon: "dock-message", glyph: "\u{1F4AC}" },
-                { label: "Files",        glyph: "\u{1F4C1}" },
-                { label: "Notes",        glyph: "\u{1F4DD}" },
-
-                { label: "Gallery",      glyph: "\u{1F5BC}" },
-                { label: "Settings", icon: "settings-home",     glyph: "⚙",    color: "#5b5b6b" },
-                { label: "Security",     glyph: "\u{1F6E1}" },
-                { label: "Store",        glyph: "\u{1F6CD}" }
-            ]
-        }
-
-        FocusCard {
-            id: focus
-            anchors.top: apps.bottom
-            anchors.topMargin: 26
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.leftMargin: Theme.screenMargin
-            anchors.rightMargin: Theme.screenMargin
+            AppHost {
+                anchors.fill: parent
+                visible: Navigation.inApp
+            }
         }
 
         Dock {
+            id: dock
+
             anchors.bottom: indicator.top
             anchors.bottomMargin: 14
             anchors.left: parent.left
@@ -133,12 +153,7 @@ Rectangle {
             anchors.leftMargin: Theme.screenMargin
             anchors.rightMargin: Theme.screenMargin
 
-            model: [
-                { label: "Home", icon: "dock-home", glyph: "\u{1F3E0}" },
-                { label: "Apps", icon: "dock-apps", glyph: "☷",    color: "#5b5b6b" },
-                { label: "Phone",    glyph: "\u{1F4DE}" },
-                { label: "Messages", icon: "dock-message", glyph: "\u{1F4AC}" }
-            ]
+            model: Apps.dock
         }
 
         // Жест-бар: место под системный жест «домой».
@@ -151,7 +166,14 @@ Rectangle {
             height: 5
             radius: 2.5
             color: Qt.rgba(0.25, 0.25, 0.35, 0.45)
+
+            // Нажатие на жест-бар возвращает домой: на устройстве без кнопок
+            // это единственный выход из приложения, кроме полосы возврата.
+            MouseArea {
+                anchors.fill: parent
+                anchors.margins: -18
+                onClicked: Navigation.show("home")
+            }
         }
     }
-
 }

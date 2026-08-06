@@ -92,17 +92,25 @@ QtObject {
         save();
     }
 
+    // Производные списки — свойства, а не функции: результат вызова функции
+    // разметка не пересчитывает, и список недавних вызовов не обновлялся бы
+    // после звонка, пока экран не откроют заново.
+
     /// Контакты, которым звонили, — от свежих к старым.
-    function recents() {
-        return store.contacts
-            .filter(function (contact) { return contact.lastCalledAt > 0; })
-            .sort(function (first, second) {
-                return second.lastCalledAt - first.lastCalledAt;
-            });
-    }
+    readonly property var recents: store.contacts
+        .filter(function (contact) { return contact.lastCalledAt > 0; })
+        .sort(function (first, second) {
+            return second.lastCalledAt - first.lastCalledAt;
+        })
+
+    /// Контакты по алфавиту: порядок хранения — порядок добавления, а список
+    /// людей, меняющий порядок при каждом звонке, нечитаем.
+    readonly property var sorted: store.contacts.slice().sort(function (first, second) {
+        return first.name.localeCompare(second.name);
+    })
 
     /// Возвращает переписку с контактом, создавая её при необходимости.
-    function threadFor(phone) {
+    function threadFor(phone, name) {
         for (let index = 0; index < store.threads.length; ++index) {
             if (store.threads[index].phone === phone) {
                 return index;
@@ -112,10 +120,12 @@ QtObject {
         const contact = store.contacts.find(function (item) {
             return item.phone === phone;
         });
+        const title = contact !== undefined ? contact.name
+                    : (name === undefined || name === "" ? phone : name);
         const now = Date.now();
 
         store.threads = store.threads.concat([{
-            title: contact === undefined ? phone : contact.name,
+            title: title,
             phone: phone,
             status: "",
             preview: "",
@@ -160,12 +170,98 @@ QtObject {
     }
 
     /// Начальные контакты первого запуска.
+    ///
+    /// Пустой список выглядел бы поломкой: первый запуск показывал бы пустые
+    /// экраны, и отличить «нет данных» от «не работает хранилище» было бы
+    /// нельзя. Записи перезаписываются, как только появляются настоящие.
     function seedContacts() {
-        return [];
+        const now = Date.now();
+
+        return [
+            seedContact("Operator Desk", "+7 912 440 77 90", "Primary", now - 240000),
+            seedContact("Base Station", "+7 912 440 12 01", "Pinned", now - 180000),
+            seedContact("Field Team", "+7 912 440 53 20", "Shared", now - 120000),
+            seedContact("Emergency Link", "112", "Priority", now - 60000)
+        ];
+    }
+
+    /// Один начальный контакт.
+    function seedContact(name, phone, note, timestamp) {
+        return {
+            name: name,
+            phone: phone,
+            note: note,
+            createdAt: timestamp,
+            updatedAt: timestamp,
+            lastCalledAt: 0,
+            lastMessageAt: 0
+        };
     }
 
     /// Начальные переписки первого запуска.
     function seedThreads() {
-        return [];
+        const now = Date.now();
+
+        return [
+            {
+                title: "Field Team",
+                phone: "+7 912 440 53 20",
+                status: "3 unread",
+                preview: "Rendezvous updated for 22:30, confirm route lock.",
+                kind: "group",
+                messages: [
+                    seedMessage("Field Team", "Rendezvous updated for 22:30.", false, now - 300000),
+                    seedMessage("", "Received. Syncing route and battery window.", true, now - 240000),
+                    seedMessage("Field Team", "Confirm route lock when ready.", false, now - 180000)
+                ],
+                createdAt: now - 300000,
+                lastMessageAt: now - 180000
+            },
+            {
+                title: "Contacts Queue",
+                phone: "",
+                status: "Updated",
+                preview: "Three follow-ups extracted from recent assistant activity.",
+                kind: "system",
+                messages: [
+                    seedMessage("Contacts Queue",
+                                "Three follow-ups extracted from assistant context.",
+                                false, now - 160000),
+                    seedMessage("", "Queue them for morning review.", true, now - 130000)
+                ],
+                createdAt: now - 160000,
+                lastMessageAt: now - 130000
+            },
+            {
+                title: "Relay Bridge",
+                phone: "",
+                // Состояние моста зависит от сети: на устройстве без связи
+                // «Linked» ввело бы в заблуждение.
+                status: DeviceState.online ? "Linked" : "Standby",
+                preview: "Relay tunnel prepared for device-to-device handoff.",
+                kind: "relay",
+                messages: [
+                    seedMessage("Relay Bridge", "Relay tunnel prepared for device handoff.",
+                                false, now - 110000),
+                    seedMessage("Relay Bridge",
+                                DeviceState.online
+                                    ? "Transport available. Ready for outbound sync."
+                                    : "Transport unavailable. Waiting for network.",
+                                false, now - 90000)
+                ],
+                createdAt: now - 110000,
+                lastMessageAt: now - 90000
+            }
+        ];
+    }
+
+    /// Одно начальное сообщение.
+    function seedMessage(author, body, outgoing, timestamp) {
+        return {
+            author: author,
+            body: body,
+            outgoing: outgoing,
+            createdAt: timestamp
+        };
     }
 }

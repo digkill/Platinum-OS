@@ -30,6 +30,6 @@ Rectangle {
         anchors.topMargin: 1
         height: 1
         radius: 0.5
-        color: Qt.rgba(1, 1, 1, 0.75)
+        color: Theme.glassHighlight
     }
 }

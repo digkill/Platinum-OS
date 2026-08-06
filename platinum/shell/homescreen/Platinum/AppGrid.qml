@@ -26,7 +26,7 @@ Grid {
             icon: modelData.icon !== undefined ? modelData.icon : ""
             glyphColor: modelData.color !== undefined ? modelData.color : Theme.accent
             artwork: modelData.artwork !== undefined ? modelData.artwork : null
-            onActivated: console.log("запуск:", modelData.label)
+            onActivated: grid.launch(modelData.id)
         }
     }
 }

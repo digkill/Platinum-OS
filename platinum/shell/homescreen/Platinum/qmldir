@@ -12,3 +12,17 @@ AppIcon 1.0 AppIcon.qml
 AppGrid 1.0 AppGrid.qml
 FocusCard 1.0 FocusCard.qml
 Dock 1.0 Dock.qml
+ActionButton 1.0 ActionButton.qml
+Pill 1.0 Pill.qml
+AppCard 1.0 AppCard.qml
+AppRow 1.0 AppRow.qml
+AppScreen 1.0 AppScreen.qml
+AppHost 1.0 AppHost.qml
+AppsScreen 1.0 AppsScreen.qml
+PlaceholderScreen 1.0 PlaceholderScreen.qml
+ClockScreen 1.0 ClockScreen.qml
+ContactsScreen 1.0 ContactsScreen.qml
+CallScreen 1.0 CallScreen.qml
+MessageScreen 1.0 MessageScreen.qml
+SettingsScreen 1.0 SettingsScreen.qml
+AiScreen 1.0 AiScreen.qml

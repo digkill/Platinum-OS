@@ -35,15 +35,20 @@ GlassPanel {
                 Text {
                     anchors.centerIn: parent
                     visible: modelData.icon === undefined
-                    text: modelData.glyph
+                    // Запись дока может не иметь эмодзи: у всех есть свой
+                    // значок, и подставлять undefined в текст незачем.
+                    text: modelData.glyph !== undefined ? modelData.glyph : ""
                     font.pixelSize: Theme.iconSize * 0.44
                     color: modelData.color !== undefined ? modelData.color : Theme.accent
                 }
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: modelData.id === "apps"
-                               ? Navigation.show("apps")
+                    // "home" и "apps" — поверхности самой оболочки, остальное
+                    // приложения. Открывать поверхность как приложение значило
+                    // бы искать её в реестре, где её нет.
+                    onClicked: modelData.id === "home" || modelData.id === "apps"
+                               ? Navigation.show(modelData.id)
                                : Navigation.open(modelData.id)
                 }
             }

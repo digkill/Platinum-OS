@@ -16,10 +16,18 @@ QtObject {
     // Открытое приложение; пусто — показана поверхность.
     property string app: ""
 
+    // Данные запуска: контакт, переданный из списка в звонилку или переписку.
+    //
+    // Перенос `AppLaunchPayload`. Приложение читает их при открытии, а не
+    // получает свойствами: экраны создаются загрузчиком по идентификатору, и
+    // прокидывать параметры сквозь него пришлось бы для каждого экрана.
+    property var payload: null
+
     readonly property bool inApp: app !== ""
 
-    /// Открывает приложение по идентификатору.
-    function open(id) {
+    /// Открывает приложение по идентификатору с необязательными данными.
+    function open(id, data) {
+        navigation.payload = data === undefined ? null : data;
         navigation.app = id;
     }
 
@@ -27,6 +35,7 @@ QtObject {
     function back() {
         if (navigation.app !== "") {
             navigation.app = "";
+            navigation.payload = null;
 
             return;
         }
@@ -37,6 +46,7 @@ QtObject {
     /// Переключает поверхность, закрывая приложение.
     function show(name) {
         navigation.app = "";
+        navigation.payload = null;
         navigation.surface = name;
     }
 }
