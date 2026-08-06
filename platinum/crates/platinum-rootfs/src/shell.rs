@@ -290,6 +290,12 @@ done
 
 [ -n "${QML:-}" ] || { echo "platinum-shell: не найден исполняемый файл qml" >&2; exit 1; }
 
+# Оболочка читает состояние устройства — заряд, сеть — прямо из sysfs через
+# XMLHttpRequest. Qt запрещает это по умолчанию, и без переменной строка
+# состояния молча показывала бы значения по умолчанию вместо настоящих.
+QML_XHR_ALLOW_FILE_READ=1
+export QML_XHR_ALLOW_FILE_READ
+
 # cage -d: композитор-киоск на всё окно, без панелей и декораций.
 exec cage -d -- "$QML" -I /usr/share/platinum/homescreen "$HOME_QML"
 "#;
@@ -365,6 +371,9 @@ mod tests {
             super::LAUNCHER.contains("не найден исполняемый файл qml"),
             "отсутствие qml обязано быть сообщением, а не пустым экраном"
         );
+        // Без этой переменной Qt запрещает чтение sysfs, и строка состояния
+        // молча показывает значения по умолчанию.
+        assert!(super::LAUNCHER.contains("QML_XHR_ALLOW_FILE_READ=1"));
     }
 
     #[test]

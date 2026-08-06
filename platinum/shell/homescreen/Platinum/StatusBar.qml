@@ -5,9 +5,12 @@ Item {
     id: bar
     height: 44
 
-    property string time: "06:30"
-    property int signalBars: 4
-    property real battery: 0.92
+    // Значения приходят из состояния устройства, а не задаются разметкой.
+    property string time: DeviceState.timeLabel
+    property int signalBars: DeviceState.signalLevel
+    property real battery: DeviceState.battery
+    property bool charging: DeviceState.charging
+    property bool online: DeviceState.online
 
     Text {
         anchors.verticalCenter: parent.verticalCenter
@@ -57,7 +60,8 @@ Item {
             onPaint: {
                 const ctx = getContext("2d");
                 ctx.reset();
-                ctx.strokeStyle = Theme.textPrimary;
+                ctx.strokeStyle = bar.online ? Theme.textPrimary
+                                             : Qt.rgba(0, 0, 0, 0.25);
                 ctx.lineCap = "round";
                 for (let i = 0; i < 3; ++i) {
                     ctx.lineWidth = 1.8;
@@ -65,7 +69,8 @@ Item {
                     ctx.arc(width / 2, height, 3.5 + i * 4, Math.PI * 1.25, Math.PI * 1.75);
                     ctx.stroke();
                 }
-                ctx.fillStyle = Theme.textPrimary;
+                ctx.fillStyle = bar.online ? Theme.textPrimary
+                                           : Qt.rgba(0, 0, 0, 0.25);
                 ctx.beginPath();
                 ctx.arc(width / 2, height - 1, 1.4, 0, Math.PI * 2);
                 ctx.fill();
@@ -92,7 +97,9 @@ Item {
                     width: (parent.width - 4) * bar.battery
                     height: parent.height - 4
                     radius: 2
-                    color: Theme.textPrimary
+                    // Зелёный при зарядке — единственный цветной элемент
+                    // строки, поэтому читается сразу.
+                    color: bar.charging ? "#34c759" : Theme.textPrimary
                 }
             }
 

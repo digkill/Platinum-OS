@@ -42,14 +42,9 @@ Rectangle {
         GradientStop { position: 1.0; color: Theme.backgroundBottom }
     }
 
-    property date now: new Date()
-
-    Timer {
-        interval: 1000
-        running: true
-        repeat: true
-        onTriggered: home.now = new Date()
-    }
+    // Время держит состояние устройства: два независимых таймера разошлись бы
+    // между часами и строкой состояния.
+    readonly property date now: DeviceState.now
 
     Item {
         id: canvas
@@ -74,8 +69,7 @@ Rectangle {
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
-            time: Qt.formatTime(home.now, "HH:mm")
-        }
+            }
 
         ClockWidget {
             id: clock
