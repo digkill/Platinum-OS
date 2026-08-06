@@ -1,0 +1,11 @@
+<svg width="74" height="74" viewBox="0 0 74 74" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="clock-bg" x1="12" y1="12" x2="62" y2="62" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8FE1FF"/>
+      <stop offset="1" stop-color="#5F8FFF"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="58" height="58" rx="18" fill="url(#clock-bg)"/>
+  <circle cx="37" cy="37" r="15" fill="#F5FAFF"/>
+  <path d="M37 27V37L46 41" stroke="#4B6078" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

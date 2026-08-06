@@ -1,0 +1,18 @@
+<svg width="74" height="74" viewBox="0 0 74 74" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="appsBg" x1="10" y1="8" x2="62" y2="66" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EEF3FF"/>
+    </linearGradient>
+    <filter id="appsShadow" x="0" y="0" width="74" height="74" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#6E84A4" flood-opacity="0.14"/>
+    </filter>
+  </defs>
+  <g filter="url(#appsShadow)">
+    <rect x="7" y="7" width="60" height="60" rx="18" fill="url(#appsBg)"/>
+  </g>
+  <rect x="18" y="18" width="14" height="14" rx="4.2" fill="#FF575F"/>
+  <rect x="42" y="18" width="14" height="14" rx="4.2" fill="#52D1C7"/>
+  <rect x="18" y="42" width="14" height="14" rx="4.2" fill="#FFC92A"/>
+  <rect x="42" y="42" width="14" height="14" rx="4.2" fill="#7E72CC"/>
+</svg>

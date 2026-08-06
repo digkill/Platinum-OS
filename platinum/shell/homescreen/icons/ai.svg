@@ -1,0 +1,16 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="ai-stroke" x1="5.5" y1="4" x2="18.5" y2="20.5" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4FD8FF"/>
+      <stop offset="0.55" stop-color="#72B5FF"/>
+      <stop offset="1" stop-color="#9B7BFF"/>
+    </linearGradient>
+    <linearGradient id="ai-fill" x1="12" y1="3.5" x2="12" y2="20.5" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D7F8FF" stop-opacity="0.8"/>
+      <stop offset="1" stop-color="#DCCFFF" stop-opacity="0.18"/>
+    </linearGradient>
+  </defs>
+  <path d="M12 3.5L18.5 7V17L12 20.5L5.5 17V7L12 3.5Z" fill="url(#ai-fill)" stroke="url(#ai-stroke)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M9.5 10.5L12 8L14.5 10.5L12 13L9.5 10.5Z" fill="#EDF5FF" stroke="url(#ai-stroke)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M12 13V16.5" stroke="#6B89FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

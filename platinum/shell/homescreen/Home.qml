@@ -104,18 +104,18 @@ Rectangle {
             anchors.rightMargin: Theme.screenMargin
 
             model: [
-                { label: "Calendar",     glyph: "\u{1F4C5}" },
-                { label: "Clock",        glyph: "\u{1F551}" },
-                { label: "Contacts",     glyph: "\u{1F464}" },
-                { label: "Platinum OS",  glyph: "◎",    color: Theme.accentSoft },
+                { label: "Calendar", icon: "calendar-home",     glyph: "\u{1F4C5}" },
+                { label: "Clock", icon: "clock-home",        glyph: "\u{1F551}" },
+                { label: "Contacts", icon: "contacts-home",     glyph: "\u{1F464}" },
+                { label: "Platinum OS", icon: "platinum-one-home",  glyph: "◎",    color: Theme.accentSoft },
 
-                { label: "AI Assistant", glyph: "●",    color: Theme.accent },
-                { label: "Messages",     glyph: "\u{1F4AC}" },
+                { label: "AI Assistant", icon: "ai-home", glyph: "●",    color: Theme.accent },
+                { label: "Messages", icon: "dock-message", glyph: "\u{1F4AC}" },
                 { label: "Files",        glyph: "\u{1F4C1}" },
                 { label: "Notes",        glyph: "\u{1F4DD}" },
 
                 { label: "Gallery",      glyph: "\u{1F5BC}" },
-                { label: "Settings",     glyph: "⚙",    color: "#5b5b6b" },
+                { label: "Settings", icon: "settings-home",     glyph: "⚙",    color: "#5b5b6b" },
                 { label: "Security",     glyph: "\u{1F6E1}" },
                 { label: "Store",        glyph: "\u{1F6CD}" }
             ]
@@ -140,10 +140,10 @@ Rectangle {
             anchors.rightMargin: Theme.screenMargin
 
             model: [
-                { label: "Home",     glyph: "\u{1F3E0}" },
-                { label: "Apps",     glyph: "☷",    color: "#5b5b6b" },
+                { label: "Home", icon: "dock-home", glyph: "\u{1F3E0}" },
+                { label: "Apps", icon: "dock-apps", glyph: "☷",    color: "#5b5b6b" },
                 { label: "Phone",    glyph: "\u{1F4DE}" },
-                { label: "Messages", glyph: "\u{1F4AC}" }
+                { label: "Messages", icon: "dock-message", glyph: "\u{1F4AC}" }
             ]
         }
 

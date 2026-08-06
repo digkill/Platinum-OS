@@ -1,0 +1,28 @@
+<svg width="74" height="74" viewBox="0 0 74 74" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="messageBg" x1="11" y1="8" x2="63" y2="66" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EEF6FF"/>
+      <stop offset="1" stop-color="#F1EAFF"/>
+    </linearGradient>
+    <linearGradient id="messageBack" x1="31" y1="18" x2="59" y2="38" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#CDC2FF"/>
+      <stop offset="1" stop-color="#A691EF"/>
+    </linearGradient>
+    <linearGradient id="messageFront" x1="15" y1="28" x2="45" y2="55" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#78DEFF"/>
+      <stop offset="1" stop-color="#34B5F5"/>
+    </linearGradient>
+    <filter id="messageShadow" x="0" y="0" width="74" height="74" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="8" flood-color="#8197C9" flood-opacity="0.16"/>
+    </filter>
+  </defs>
+  <g filter="url(#messageShadow)">
+    <rect x="7" y="7" width="60" height="60" rx="18" fill="url(#messageBg)"/>
+  </g>
+  <path d="M34 19H52.6C55.36 19 57.6 21.24 57.6 24V33.6C57.6 36.36 55.36 38.6 52.6 38.6H34C31.24 38.6 29 36.36 29 33.6V24C29 21.24 31.24 19 34 19Z" fill="url(#messageBack)"/>
+  <path d="M49.5 37.8L55 43.5L53.9 36.8" fill="url(#messageBack)"/>
+  <path d="M22.6 27.8H41.4C44.74 27.8 47.4 30.46 47.4 33.8V44.6C47.4 47.94 44.74 50.6 41.4 50.6H31.7L22.9 57V50.6H22.6C19.26 50.6 16.6 47.94 16.6 44.6V33.8C16.6 30.46 19.26 27.8 22.6 27.8Z" fill="url(#messageFront)"/>
+  <path d="M25.2 35.6H38.5" stroke="#F8FCFF" stroke-width="3.4" stroke-linecap="round"/>
+  <path d="M25.2 41.4H34.7" stroke="#F8FCFF" stroke-width="3.4" stroke-linecap="round"/>
+  <path d="M36.9 26.8H50.9" stroke="#F8FCFF" stroke-opacity="0.92" stroke-width="3.1" stroke-linecap="round"/>
+</svg>

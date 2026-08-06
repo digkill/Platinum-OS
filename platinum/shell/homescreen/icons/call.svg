@@ -1,0 +1,19 @@
+<svg width="74" height="74" viewBox="0 0 74 74" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="callBg" x1="11" y1="8" x2="63" y2="66" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ECFFF2"/>
+      <stop offset="1" stop-color="#D3F6DA"/>
+    </linearGradient>
+    <linearGradient id="callGreen" x1="19" y1="16" x2="55" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#68EA66"/>
+      <stop offset="1" stop-color="#31C248"/>
+    </linearGradient>
+    <filter id="callShadow" x="0" y="0" width="74" height="74" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="8" flood-color="#7FAA87" flood-opacity="0.16"/>
+    </filter>
+  </defs>
+  <g filter="url(#callShadow)">
+    <rect x="7" y="7" width="60" height="60" rx="18" fill="url(#callBg)"/>
+  </g>
+  <path d="M24.5 18.6C26.9 16.5 30 16.1 32.6 17.6L39.2 21.5C41.4 22.9 42 26.2 40.6 28.5L36.9 34C35.8 35.8 36 38.1 37.5 39.6L49.3 51.4C50.8 52.9 53.1 53.1 54.9 52L60.4 48.3C62.7 46.9 66 47.5 67.4 49.7L71.3 56.3C72.8 58.9 72.4 62 70.3 64.4L67.5 67.2C62.9 71.8 55.8 72.9 49.7 70.1C43.5 67.3 37.4 63.1 31.8 57.5C26.2 51.9 22 45.8 19.2 39.6C16.4 33.5 17.5 26.4 22.1 21.8L24.9 19L24.5 18.6Z" fill="url(#callGreen)" transform="translate(-7 -7) scale(0.78) translate(11 11)"/>
+</svg>

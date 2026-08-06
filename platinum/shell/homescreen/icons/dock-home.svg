@@ -1,0 +1,17 @@
+<svg width="42" height="42" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="dockHomeRoof" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFC66D"/>
+      <stop offset="100%" stop-color="#FF8A4C"/>
+    </linearGradient>
+    <linearGradient id="dockHomeWall" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#7EC8FF"/>
+      <stop offset="100%" stop-color="#4F9DFF"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(12 12) scale(0.82) translate(-12 -12)">
+    <path d="M12 4.8 5.4 11.2h13.2L12 4.8z" fill="url(#dockHomeRoof)"/>
+    <rect x="6.5" y="11.2" width="11" height="9.2" rx="1.1" fill="url(#dockHomeWall)"/>
+    <rect x="10.7" y="14.4" width="2.6" height="4.2" rx="0.35" fill="rgba(255,255,255,0.92)"/>
+  </g>
+</svg>

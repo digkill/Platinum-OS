@@ -21,6 +21,7 @@ Grid {
             width: grid.width / grid.columns
             label: modelData.label
             glyph: modelData.glyph !== undefined ? modelData.glyph : ""
+            icon: modelData.icon !== undefined ? modelData.icon : ""
             glyphColor: modelData.color !== undefined ? modelData.color : Theme.accent
             artwork: modelData.artwork !== undefined ? modelData.artwork : null
             onActivated: console.log("запуск:", modelData.label)

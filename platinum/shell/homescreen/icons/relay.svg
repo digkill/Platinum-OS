@@ -1,0 +1,18 @@
+<svg width="74" height="74" viewBox="0 0 74 74" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="relayBg" x1="11" y1="8" x2="63" y2="66" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6BE2FF"/>
+      <stop offset="1" stop-color="#6D8FFF"/>
+    </linearGradient>
+    <filter id="relayShadow" x="0" y="0" width="74" height="74" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="8" flood-color="#5C86C8" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <g filter="url(#relayShadow)">
+    <rect x="7" y="7" width="60" height="60" rx="18" fill="url(#relayBg)"/>
+  </g>
+  <path d="M23 31.2C26.22 27.86 31.44 25.8 37.6 25.8C43.76 25.8 48.98 27.86 52.2 31.2" stroke="white" stroke-width="4.8" stroke-linecap="round"/>
+  <path d="M16.8 23.8C21.74 18.68 29.22 15.5 37.6 15.5C45.98 15.5 53.46 18.68 58.4 23.8" stroke="white" stroke-width="4.8" stroke-linecap="round" opacity="0.92"/>
+  <path d="M29.2 39.8C31.12 37.88 33.82 36.8 36.8 36.8C39.78 36.8 42.48 37.88 44.4 39.8" stroke="white" stroke-width="4.8" stroke-linecap="round" opacity="0.96"/>
+  <circle cx="37" cy="50.6" r="4.8" fill="white"/>
+</svg>

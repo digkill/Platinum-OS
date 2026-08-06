@@ -1,0 +1,22 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="settings-stroke" x1="3.5" y1="3.1" x2="20.5" y2="20.9" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A7ECFF"/>
+      <stop offset="0.5" stop-color="#7ABEFF"/>
+      <stop offset="1" stop-color="#B3A1FF"/>
+    </linearGradient>
+    <radialGradient id="settings-core" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(12 12) rotate(90) scale(4.5)">
+      <stop stop-color="#F7FAFF"/>
+      <stop offset="1" stop-color="#DCE5FF"/>
+    </radialGradient>
+  </defs>
+  <path d="M12 3.5V6.5" stroke="url(#settings-stroke)" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M12 17.5V20.5" stroke="url(#settings-stroke)" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M4.6 6.1L6.7 8.2" stroke="url(#settings-stroke)" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M17.3 18.8L19.4 20.9" stroke="url(#settings-stroke)" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M3.5 12H6.5" stroke="url(#settings-stroke)" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M17.5 12H20.5" stroke="url(#settings-stroke)" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M4.6 17.9L6.7 15.8" stroke="url(#settings-stroke)" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M17.3 5.2L19.4 3.1" stroke="url(#settings-stroke)" stroke-width="1.8" stroke-linecap="round"/>
+  <circle cx="12" cy="12" r="3.2" fill="url(#settings-core)" stroke="url(#settings-stroke)" stroke-width="1.8"/>
+</svg>

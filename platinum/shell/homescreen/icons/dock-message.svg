@@ -1,0 +1,24 @@
+<svg width="42" height="42" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="dockMessageBack" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#93D8FB"/>
+      <stop offset="55%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#0284C7"/>
+    </linearGradient>
+    <linearGradient id="dockMessageFront" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EDE9FE"/>
+      <stop offset="45%" stop-color="#C4B5FD"/>
+      <stop offset="100%" stop-color="#6D28D9"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.75 9.5H11.75A2.25 2.25 0 0 1 14 11.75v4.5a2.25 2.25 0 0 1-2.25 2.25H7.35L1.65 20.45 6.55 18.5H4.75A2.25 2.25 0 0 1 2.5 16.25v-4.5A2.25 2.25 0 0 1 4.75 9.5Z" fill="url(#dockMessageBack)" stroke="rgba(255,255,255,0.5)" stroke-width="0.55" stroke-linejoin="round"/>
+  <path d="M12.25 3.5H20.25A2.25 2.25 0 0 1 22.5 5.75v4.5a2.25 2.25 0 0 1-2.25 2.25H16.4l6.85 1.65-3.75-1.65H12.25A2.25 2.25 0 0 1 10 10.25v-4.5A2.25 2.25 0 0 1 12.25 3.5Z" fill="url(#dockMessageFront)" stroke="rgba(255,255,255,0.55)" stroke-width="0.55" stroke-linejoin="round"/>
+  <g fill="rgba(255,255,255,0.62)">
+    <rect x="4" y="11.85" width="5.2" height="1.15" rx="0.57"/>
+    <rect x="4" y="14.05" width="3.6" height="1.15" rx="0.57"/>
+  </g>
+  <g fill="rgba(255,255,255,0.75)">
+    <rect x="12.25" y="5.85" width="6.6" height="1.15" rx="0.57"/>
+    <rect x="12.25" y="8.05" width="4.2" height="1.15" rx="0.57"/>
+  </g>
+</svg>

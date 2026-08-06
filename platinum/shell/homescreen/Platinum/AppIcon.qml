@@ -6,6 +6,8 @@ Item {
 
     property string label: ""
     property string glyph: ""
+    /// Имя файла значка в каталоге icons без расширения.
+    property string icon: ""
     property color glyphColor: Theme.accent
     property Component artwork: null
 
@@ -30,9 +32,20 @@ Item {
             sourceComponent: app.artwork
         }
 
+        // Значок продукта имеет приоритет: эмодзи остаются запасным вариантом
+        // для приложений, которым свой значок ещё не нарисован.
+        Image {
+            anchors.centerIn: parent
+            visible: app.icon !== ""
+            source: app.icon === "" ? "" : "../icons/" + app.icon + ".svg"
+            sourceSize.width: Theme.iconSize * 0.58
+            sourceSize.height: Theme.iconSize * 0.58
+            smooth: true
+        }
+
         Text {
             anchors.centerIn: parent
-            visible: app.artwork === null
+            visible: app.artwork === null && app.icon === ""
             text: app.glyph
             font.pixelSize: Theme.iconSize * 0.46
             color: app.glyphColor
