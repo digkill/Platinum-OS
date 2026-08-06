@@ -58,9 +58,9 @@ fn builds_an_image_with_a_real_filesystem() {
                 16,
                 32,
                 Some("/".into()),
-                true,
             )
-            .expect("описание раздела должно быть корректным"),
+            .expect("описание раздела должно быть корректным")
+            .bootable(true),
         ],
         1,
     )

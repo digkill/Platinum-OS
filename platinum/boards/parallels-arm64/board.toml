@@ -1,0 +1,31 @@
+# Виртуальная машина arm64 с прошивкой UEFI.
+#
+# Не плата, а класс машин: Parallels Desktop на Apple Silicon, QEMU с EDK2, UTM
+# и обычные arm64-компьютеры с UEFI. Отсюда generic-ядро и загрузка через ESP —
+# ни vendor U-Boot, ни прошивки платы здесь нет.
+#
+# Смысл цели — цикл проверки в минутах вместо записи карты и перезагрузки платы.
+id = "parallels-arm64"
+name = "Parallels arm64"
+architecture = "arm64"
+soc = "виртуальный arm64"
+bsp_family = "uefi"
+memory_mib = 8192
+
+# DTB не используется: прошивка UEFI передаёт ядру ACPI, а не device tree.
+# Поле обязательно схемой, поэтому оставлено пустым осознанно.
+dtb = ""
+
+# Секции [armbian] нет: ядро приходит из архива Ubuntu обычным apt.
+
+[bootloader]
+method = "uefi"
+esp_mount_point = "/boot/efi"
+
+[rootfs]
+# Тот же базовый userspace, что и у остальных целей.
+# https://cdimage.ubuntu.com/ubuntu-base/releases/26.04/release/SHA256SUMS
+release = "26.04"
+architecture = "arm64"
+url = "https://cdimage.ubuntu.com/ubuntu-base/releases/26.04/release/ubuntu-base-26.04-base-arm64.tar.gz"
+sha256 = "b2b46a37324ea1954e93f293fe6d7c2241daf2fc298c4022e6e4caceeed74cab"

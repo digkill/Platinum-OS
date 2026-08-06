@@ -272,6 +272,8 @@ pub struct SystemSpec {
     pub users: Vec<User>,
     /// Записи `/etc/fstab`.
     pub filesystems: Vec<Filesystem>,
+    /// Backend netplan: `networkd` или `NetworkManager`.
+    pub renderer: String,
     /// Интерфейсы, которым netplan выдаёт DHCP-конфигурацию.
     pub dhcp_interfaces: Vec<String>,
     /// Модули ядра, загружаемые при старте (`/etc/modules`).
@@ -284,6 +286,8 @@ pub struct SystemSpec {
     pub shell: Option<crate::shell::ShellSpec>,
     /// Настройка первой загрузки, если образ её поддерживает.
     pub cloud_init: Option<crate::cloudinit::CloudInitSpec>,
+    /// Заставка при загрузке, если она задана.
+    pub splash: Option<crate::splash::SplashSpec>,
 }
 
 impl SystemSpec {
@@ -307,18 +311,27 @@ impl SystemSpec {
             locale,
             users: Vec::new(),
             filesystems: Vec::new(),
+            renderer: "networkd".to_owned(),
             dhcp_interfaces: Vec::new(),
             modules: Vec::new(),
             expand_rootfs: false,
             wifi: Vec::new(),
             shell: None,
             cloud_init: None,
+            splash: None,
         })
     }
 
     /// Добавляет модули ядра, загружаемые при старте.
     pub fn with_modules(mut self, modules: Vec<String>) -> Self {
         self.modules = modules;
+
+        self
+    }
+
+    /// Включает заставку при загрузке.
+    pub fn with_splash(mut self, splash: Option<crate::splash::SplashSpec>) -> Self {
+        self.splash = splash;
 
         self
     }
@@ -333,6 +346,13 @@ impl SystemSpec {
     /// Включает графическую оболочку.
     pub fn with_shell(mut self, shell: Option<crate::shell::ShellSpec>) -> Self {
         self.shell = shell;
+
+        self
+    }
+
+    /// Задаёт backend netplan.
+    pub fn with_renderer(mut self, renderer: String) -> Self {
+        self.renderer = renderer;
 
         self
     }

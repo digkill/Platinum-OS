@@ -207,6 +207,8 @@ pub struct PartitionSpec {
     pub mount_point: Option<String>,
     /// Отмечать ли раздел активным в таблице MBR.
     pub bootable: bool,
+    /// Является ли раздел системным разделом UEFI.
+    pub esp: bool,
 }
 
 impl PartitionSpec {
@@ -218,7 +220,6 @@ impl PartitionSpec {
         start_mib: u64,
         size_mib: u64,
         mount_point: Option<String>,
-        bootable: bool,
     ) -> Result<Self, LayoutError> {
         if name.trim().is_empty() {
             return Err(LayoutError::EmptyName);
@@ -259,8 +260,40 @@ impl PartitionSpec {
             start_mib,
             size_mib,
             mount_point,
-            bootable,
+            bootable: false,
+            esp: false,
         })
+    }
+
+    /// Отмечает раздел активным в таблице MBR.
+    pub fn bootable(mut self, bootable: bool) -> Self {
+        self.bootable = bootable;
+
+        self
+    }
+
+    /// Отмечает раздел как системный раздел UEFI.
+    ///
+    /// Флаги задаются отдельными методами, а не аргументами конструктора: два
+    /// соседних `bool` в вызове переставляются местами незаметно, а разница
+    /// между «активный» и «ESP» видна только на устройстве, которое не
+    /// загрузилось.
+    pub fn esp(mut self, esp: bool) -> Self {
+        self.esp = esp;
+
+        self
+    }
+
+    /// Возвращает код типа раздела для таблицы MBR.
+    ///
+    /// ESP имеет собственный тип: прошивка UEFI ищет раздел именно по нему и
+    /// помеченный как обычный FAT пропустит.
+    pub fn partition_type(&self) -> u8 {
+        if self.esp {
+            0xEF
+        } else {
+            self.filesystem.mbr_partition_type()
+        }
     }
 
     /// Возвращает первый сектор раздела.
@@ -411,9 +444,9 @@ mod tests {
             start_mib,
             size_mib,
             Some("/".into()),
-            true,
         )
         .expect("описание раздела должно быть корректным")
+        .bootable(true)
     }
 
     #[test]
@@ -446,7 +479,6 @@ mod tests {
                     200,
                     2048,
                     Some("/".into()),
-                    false,
                 )
                 .expect("описание раздела должно быть корректным"),
             ],
@@ -466,7 +498,6 @@ mod tests {
             0,
             2048,
             None,
-            false,
         )
         .expect_err("раздел не должен начинаться с нулевого смещения");
 
@@ -510,7 +541,6 @@ mod tests {
             16,
             2048,
             None,
-            false,
         )
         .expect_err("слишком длинная метка должна отклоняться");
 
@@ -542,9 +572,10 @@ mod tests {
                     16 + index * 16,
                     16,
                     None,
-                    false,
                 )
                 .expect("описание раздела должно быть корректным")
+                .bootable(false)
+                .esp(false)
             })
             .collect();
 

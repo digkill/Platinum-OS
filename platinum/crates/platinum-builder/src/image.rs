@@ -85,9 +85,10 @@ pub fn image_layout(config: &PartitionsConfig) -> Result<ImageLayout> {
                 partition.start_mib,
                 partition.size_mib,
                 partition.mount_point.clone(),
-                partition.bootable,
             )
-            .with_context(|| format!("раздел `{}`", partition.name))?,
+            .with_context(|| format!("раздел `{}`", partition.name))?
+            .bootable(partition.bootable)
+            .esp(partition.esp),
         );
     }
 

@@ -24,6 +24,9 @@ const DEVICE_TREE_DIRECTORY: &str = "usr/lib/firmware";
 /// Подкаталог device tree внутри каталога версии ядра.
 const DEVICE_TREE_SUBDIRECTORY: &str = "device-tree";
 
+/// Каталог DT overlay внутри дерева device-tree.
+const OVERLAYS_DIRECTORY: &str = "overlays";
+
 /// Имя ядра на FAT-разделе.
 const KERNEL_FILE: &str = "vmlinuz";
 
@@ -48,6 +51,12 @@ pub enum RaspberryPiError {
         /// Имя DTB из board-конфигурации.
         dtb: String,
         /// Ожидавшийся путь внутри rootfs.
+        path: PathBuf,
+    },
+    /// Каталога DT overlay нет: без него `dtoverlay=` в config.txt не работает.
+    #[error("каталог DT overlay отсутствует: {path}; проверьте linux-modules-*-raspi")]
+    MissingOverlays {
+        /// Ожидавшийся каталог.
         path: PathBuf,
     },
     /// Файловая операция не удалась.
@@ -94,6 +103,7 @@ impl RaspberryPiConfigurator {
     pub fn apply(&self, rootfs: &Path, dtb: &str) -> Result<PathBuf, RaspberryPiError> {
         let boot = rootfs.join(BOOT_DIRECTORY);
         let (version, kernel, initrd) = discover_kernel(&boot)?;
+        let artifacts_version = version.clone();
 
         let firmware = rootfs.join(self.spec.firmware_mount_point.trim_start_matches('/'));
         fs::create_dir_all(&firmware).map_err(|source| RaspberryPiError::Write {
@@ -114,6 +124,12 @@ impl RaspberryPiConfigurator {
         }
         copy(&device_tree, &firmware.join(dtb))?;
 
+        // Overlay обязательны: без них прошивка не применит `dtoverlay=` из
+        // config.txt. В частности не включится vc4-kms-v3d, а значит не
+        // появится DRM-устройство — HDMI останется чёрным при полностью
+        // загруженной системе. Поймано на живой плате.
+        self.copy_overlays(rootfs, &artifacts_version, &firmware)?;
+
         write(&firmware.join(CONFIG_FILE), &render_config(&self.spec, dtb))?;
         write(&firmware.join(CMDLINE_FILE), &render_cmdline(&self.spec))?;
 
@@ -126,6 +142,49 @@ impl RaspberryPiConfigurator {
         );
 
         Ok(path)
+    }
+
+    /// Копирует каталог DT overlay на загрузочный раздел.
+    fn copy_overlays(
+        &self,
+        rootfs: &Path,
+        version: &str,
+        firmware: &Path,
+    ) -> Result<(), RaspberryPiError> {
+        let source = rootfs
+            .join(DEVICE_TREE_DIRECTORY)
+            .join(version)
+            .join(DEVICE_TREE_SUBDIRECTORY)
+            .join(OVERLAYS_DIRECTORY);
+
+        if !source.is_dir() {
+            return Err(RaspberryPiError::MissingOverlays { path: source });
+        }
+
+        let target = firmware.join(OVERLAYS_DIRECTORY);
+        fs::create_dir_all(&target).map_err(|error| RaspberryPiError::Write {
+            path: target.clone(),
+            source: error,
+        })?;
+
+        let entries = fs::read_dir(&source).map_err(|error| RaspberryPiError::Write {
+            path: source.clone(),
+            source: error,
+        })?;
+
+        for entry in entries {
+            let entry = entry.map_err(|error| RaspberryPiError::Write {
+                path: source.clone(),
+                source: error,
+            })?;
+
+            let from = entry.path();
+            if from.is_file() {
+                copy(&from, &target.join(entry.file_name()))?;
+            }
+        }
+
+        Ok(())
     }
 
     /// Возвращает путь DTB внутри дерева, разложенного пакетом модулей.

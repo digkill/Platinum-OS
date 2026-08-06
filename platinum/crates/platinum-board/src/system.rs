@@ -43,6 +43,9 @@ pub struct SystemConfig {
     /// Настройка первой загрузки через cloud-init.
     #[serde(default)]
     pub cloud_init: Option<CloudInitConfig>,
+    /// Заставка при загрузке.
+    #[serde(default)]
+    pub splash: Option<SplashConfig>,
     /// Расширять ли корень на весь носитель при первом запуске.
     ///
     /// Включено по умолчанию: образ выпускается под самую маленькую карту, и
@@ -81,6 +84,22 @@ impl Default for BootConfig {
 /// Задержка меню по умолчанию: три секунды на прерывание загрузки.
 fn default_boot_timeout() -> u32 {
     30
+}
+
+/// Заставка, показываемая при загрузке.
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct SplashConfig {
+    /// Изображение; путь относительный к файлу конфигурации.
+    pub image: String,
+    /// Цвет фона в формате `#rrggbb`.
+    #[serde(default = "default_splash_background")]
+    pub background: String,
+}
+
+/// Фон заставки по умолчанию — верхний цвет градиента оболочки.
+fn default_splash_background() -> String {
+    "#c9c6ee".to_owned()
 }
 
 /// Настройка образа при первой загрузке.
@@ -163,6 +182,14 @@ pub struct FilesystemConfig {
 #[derive(Debug, Clone, Default, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub struct NetworkConfig {
+    /// Кто применяет конфигурацию netplan: `networkd` или `NetworkManager`.
+    ///
+    /// Определяется составом образа, а не вкусом: netplan лишь генерирует
+    /// настройки для указанного backend, и если тот не запущен, конфигурация
+    /// молча не применяется. Plasma тянет NetworkManager зависимостью, на
+    /// платах без графики его нет.
+    #[serde(default = "default_renderer")]
+    pub renderer: String,
     /// Проводные интерфейсы, получающие адрес по DHCP.
     #[serde(default)]
     pub dhcp_interfaces: Vec<String>,
@@ -172,6 +199,13 @@ pub struct NetworkConfig {
     /// Задаётся своим `system.toml` через `--system <path>`, как и пароли.
     #[serde(default)]
     pub wifi: Vec<WifiConfig>,
+}
+
+/// Backend netplan по умолчанию.
+///
+/// `networkd` выбран умолчанием как штатный для образов без графики.
+fn default_renderer() -> String {
+    "networkd".to_owned()
 }
 
 /// Одна сеть Wi-Fi.

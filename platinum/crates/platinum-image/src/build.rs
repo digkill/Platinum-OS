@@ -559,9 +559,10 @@ mod tests {
             start_mib,
             16,
             mount_point.map(str::to_owned),
-            false,
         )
         .expect("описание раздела должно быть корректным")
+        .bootable(false)
+        .esp(false)
     }
 
     #[test]

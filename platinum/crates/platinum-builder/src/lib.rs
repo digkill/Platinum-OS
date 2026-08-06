@@ -110,6 +110,7 @@ mod tests {
             boot: BootConfig::default(),
             shell: None,
             cloud_init: None,
+            splash: None,
             expand_rootfs: true,
         }
     }
@@ -391,6 +392,54 @@ mod tests {
             stages.contains(&"configure-boot"),
             "загрузка обязана настраиваться: {stages:?}"
         );
+        assert_eq!(stages.last(), Some(&"build-image"));
+    }
+
+    /// Данные виртуальной машины UEFI должны собираться в pipeline.
+    ///
+    /// Третий класс целей после Armbian и прошивки Raspberry Pi: загрузчик
+    /// приходит с firmware, поэтому в сырые сектора не пишется ничего, а ESP
+    /// обязан получить собственный код типа раздела.
+    #[test]
+    fn uefi_board_data_builds_a_pipeline() {
+        let boards = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../boards/parallels-arm64");
+
+        let board = BoardConfig::load(&boards.join("board.toml"))
+            .expect("board.toml платы должен читаться");
+        let packages = PackagesConfig::load(&boards.join("packages-shell.toml"))
+            .expect("packages.toml платы должен читаться");
+        let system = SystemConfig::load(&boards.join("system-shell.toml"))
+            .expect("system.toml платы должен читаться");
+        let partitions = PartitionsConfig::load(&boards.join("partitions.toml"))
+            .expect("partitions.toml платы должен читаться");
+
+        assert!(
+            board.armbian.is_none(),
+            "виртуальной машине Armbian не нужен"
+        );
+        assert!(
+            !board.bootloader.writes_raw_sectors(),
+            "загрузчик приходит с прошивкой, писать в сектора нечего"
+        );
+        assert!(
+            partitions.partitions.iter().any(|partition| partition.esp),
+            "без раздела ESP прошивка не найдёт загрузчик"
+        );
+
+        let engine = BuildEngine::new(
+            board,
+            BuildOptions {
+                with_bsp: false,
+                packages: Some(packages),
+                system: Some(system),
+                partitions: Some(partitions),
+                config_dir: boards.clone(),
+            },
+        )
+        .expect("данные платы должны давать корректный pipeline");
+
+        let stages: Vec<_> = engine.stage_names().collect();
+        assert!(stages.contains(&"configure-boot"));
         assert_eq!(stages.last(), Some(&"build-image"));
     }
 

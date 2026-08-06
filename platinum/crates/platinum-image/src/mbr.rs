@@ -78,7 +78,7 @@ fn render_entry(partition: &PartitionSpec) -> Result<[u8; ENTRY_SIZE], LayoutErr
     let mut entry = [0_u8; ENTRY_SIZE];
     entry[0] = if partition.bootable { BOOTABLE_FLAG } else { 0 };
     entry[1..4].copy_from_slice(&CHS_BEYOND_LIMIT);
-    entry[4] = partition.filesystem.mbr_partition_type();
+    entry[4] = partition.partition_type();
     entry[5..8].copy_from_slice(&CHS_BEYOND_LIMIT);
     entry[8..12].copy_from_slice(&start.to_le_bytes());
     entry[12..16].copy_from_slice(&sectors.to_le_bytes());
@@ -102,9 +102,9 @@ mod tests {
                     16,
                     2048,
                     Some("/".into()),
-                    true,
                 )
-                .expect("описание раздела должно быть корректным"),
+                .expect("описание раздела должно быть корректным")
+                .bootable(true),
             ],
             1,
         )

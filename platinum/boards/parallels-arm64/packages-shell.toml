@@ -6,11 +6,7 @@
 # Ubuntu Base приходит со своим `sources.list`, поэтому suite и зеркало здесь не
 # переопределяются: рассинхронизация suite с базовым архивом ломает apt.
 #
-# ВАРИАНТ С ГРАФИЧЕСКОЙ ОБОЛОЧКОЙ.
-#
-# Передаётся явно: `--packages boards/raspberrypi-5/packages-shell.toml`.
-# Обычная сборка остаётся без графики, чтобы образ без экрана не тащил
-# полтора гигабайта Qt.
+# Состав Platinum userspace для виртуальной машины arm64 с UEFI.
 #
 # Ядро приходит из архива Ubuntu, а не из BSP: linux-image-raspi — метапакет,
 # который тянет актуальную сборку ядра Pi вместе с модулями и DTB.
@@ -46,11 +42,13 @@ install = [
     "iw",
     "rfkill",
 
-    # утилита обновления загрузчика в EEPROM платы
-    "rpi-eeprom",
+    # generic-ядро arm64: у виртуальной машины нет vendor-железа, а virtio
+    # драйверы в нём уже есть
+    "linux-image-generic",
 
-    # ядро Raspberry Pi и его firmware из архива Ubuntu
-    "linux-image-raspi",
+    # загрузчик: прошивка UEFI ищет EFI/BOOT/BOOTAA64.EFI на разделе ESP
+    "grub-efi-arm64",
+    "grub-efi-arm64-bin",
 
     # графический стек: Wayland-композитор, оболочка и вход
     #
@@ -77,7 +75,7 @@ install = [
     "qml6-module-qtquick-shapes",
     "qml6-module-qtquick-effects",
 
-    # драйверы GPU: VideoCore VII с открытым v3d/vc4, ускорение аппаратное
+    # драйверы GPU: у виртуальной машины это virtio-gpu, ускорение программное
     "libgl1-mesa-dri",
     "libegl-mesa0",
     "mesa-vulkan-drivers",

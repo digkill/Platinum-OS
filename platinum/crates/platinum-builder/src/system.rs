@@ -2,7 +2,8 @@ use anyhow::{Context, Result};
 use platinum_board::SystemConfig;
 use platinum_core::{BuildContext, Stage};
 use platinum_rootfs::{
-    Chroot, CloudInitSpec, Filesystem, ShellSpec, SystemConfigurator, SystemSpec, User, WifiNetwork,
+    Chroot, CloudInitSpec, Filesystem, ShellSpec, SplashSpec, SystemConfigurator, SystemSpec, User,
+    WifiNetwork,
 };
 
 use crate::outputs;
@@ -127,6 +128,13 @@ pub fn system_spec(
         None => None,
     };
 
+    let splash = config.splash.map(|splash| SplashSpec {
+        image: config_dir.join(splash.image),
+        background: splash.background,
+    });
+
+    let renderer = config.network.renderer.clone();
+
     let expand_rootfs = config.expand_rootfs;
 
     let spec = SystemSpec::new(config.hostname, config.timezone, config.locale)
@@ -140,8 +148,10 @@ pub fn system_spec(
         .with_modules(modules)
         .with_rootfs_expansion(expand_rootfs)
         .with_wifi(wifi)
+        .with_renderer(renderer)
         .with_shell(shell)
-        .with_cloud_init(cloud_init);
+        .with_cloud_init(cloud_init)
+        .with_splash(splash);
 
     Ok(spec)
 }

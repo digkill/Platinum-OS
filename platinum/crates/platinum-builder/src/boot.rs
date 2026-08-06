@@ -2,8 +2,8 @@ use anyhow::{Context, Result};
 use platinum_board::{BootConfig, BootloaderConfig, PartitionsConfig};
 use platinum_core::{BuildContext, Stage};
 use platinum_rootfs::{
-    BootConfigurator, BootScriptConfigurator, BootScriptSpec, BootSpec, RaspberryPiConfigurator,
-    RaspberryPiSpec,
+    BootConfigurator, BootScriptConfigurator, BootScriptSpec, BootSpec, Chroot,
+    RaspberryPiConfigurator, RaspberryPiSpec, UefiConfigurator, UefiSpec,
 };
 
 use crate::outputs;
@@ -15,6 +15,7 @@ use crate::outputs;
 pub struct ConfigureBootStage {
     method: BootMethod,
     dtb: String,
+    architecture: String,
 }
 
 /// Способ загрузки, выбранный данными платы.
@@ -28,11 +29,18 @@ enum BootMethod {
     Script(BootScriptConfigurator),
     /// Файлы прошивки Raspberry Pi на FAT-разделе.
     RaspberryPi(RaspberryPiConfigurator),
+    /// GRUB на разделе ESP для машин с прошивкой UEFI.
+    Uefi(UefiConfigurator),
 }
 
 impl ConfigureBootStage {
     /// Создаёт stage для параметров загрузки и DTB платы.
-    pub fn new(spec: BootSpec, bootloader: &BootloaderConfig, dtb: String) -> Self {
+    pub fn new(
+        spec: BootSpec,
+        bootloader: &BootloaderConfig,
+        dtb: String,
+        architecture: String,
+    ) -> Self {
         let method = match bootloader {
             BootloaderConfig::Extlinux => BootMethod::Extlinux(BootConfigurator::new(spec)),
             BootloaderConfig::BootScript(script) => {
@@ -55,9 +63,21 @@ impl ConfigureBootStage {
                     config: pi.config.clone(),
                 }))
             }
+            BootloaderConfig::Uefi(uefi) => BootMethod::Uefi(UefiConfigurator::new(UefiSpec {
+                root_source: spec.root_source,
+                root_filesystem: spec.root_filesystem,
+                extra_arguments: spec.extra_arguments,
+                esp_mount_point: uefi.esp_mount_point.clone(),
+                // Меню в десятых долях секунды у extlinux, у GRUB — в секундах.
+                timeout_seconds: spec.timeout_deciseconds / 10,
+            })),
         };
 
-        Self { method, dtb }
+        Self {
+            method,
+            dtb,
+            architecture,
+        }
     }
 }
 
@@ -92,6 +112,23 @@ impl Stage for ConfigureBootStage {
                 let path = configurator
                     .apply(&rootfs, &self.dtb)
                     .context("не удалось подготовить загрузочный раздел Raspberry Pi")?;
+
+                context.record(outputs::BOOT_FIRMWARE_CONFIG, path);
+            }
+            BootMethod::Uefi(configurator) => {
+                let path = configurator
+                    .apply(&rootfs)
+                    .context("не удалось подготовить раздел ESP")?;
+
+                // grub-install выполняется в chroot: он ставит загрузчик
+                // целевой архитектуры и знает пути только внутри системы.
+                let chroot = Chroot::new(rootfs, self.architecture.clone())
+                    .context("каталог rootfs непригоден для chroot")?;
+                let session = chroot.enter().context("не удалось войти в chroot")?;
+
+                configurator
+                    .install(&session)
+                    .context("не удалось установить GRUB на раздел ESP")?;
 
                 context.record(outputs::BOOT_FIRMWARE_CONFIG, path);
             }

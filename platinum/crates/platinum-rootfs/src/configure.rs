@@ -19,6 +19,7 @@ use crate::{
     cloudinit::{CloudInitConfigurator, CloudInitError},
     resize::{ResizeError, RootfsExpander},
     shell::{ShellConfigurator, ShellError},
+    splash::{SplashConfigurator, SplashError},
     system::{Filesystem, SystemSpec, User, WifiNetwork},
 };
 
@@ -86,6 +87,9 @@ pub enum ConfigureError {
     /// Не удалось включить настройку первой загрузки.
     #[error(transparent)]
     CloudInit(CloudInitError),
+    /// Не удалось установить заставку.
+    #[error(transparent)]
+    Splash(SplashError),
 }
 
 /// Применяет проверенную системную конфигурацию к rootfs.
@@ -116,6 +120,7 @@ impl SystemConfigurator {
         self.install_rootfs_expansion(root)?;
         self.enable_shell(root)?;
         self.enable_cloud_init(root)?;
+        self.install_splash(root)?;
         write_file(
             &root.join(LOCALE_GEN_FILE),
             &render_locale_gen(&self.spec.locale, self.spec.locale_charset()),
@@ -130,6 +135,12 @@ impl SystemConfigurator {
 
         for user in &self.spec.users {
             create_user(&session, root, user)?;
+        }
+
+        // Тема назначается в chroot: команда пересобирает initramfs, а без
+        // этого заставка появилась бы лишь под конец загрузки.
+        if let Some(splash) = &self.spec.splash {
+            SplashConfigurator::new(splash.clone()).activate(&session)?;
         }
 
         info!(
@@ -168,6 +179,17 @@ impl SystemConfigurator {
         // пока rootfs ещё не смонтирован как корень.
         let target = format!("../{ZONEINFO_DIRECTORY}/{}", self.spec.timezone);
         symlink(&target, &link).map_err(|source| ConfigureError::Write { path: link, source })
+    }
+
+    /// Раскладывает тему заставки, если она задана.
+    fn install_splash(&self, root: &Path) -> Result<(), ConfigureError> {
+        let Some(splash) = &self.spec.splash else {
+            return Ok(());
+        };
+
+        SplashConfigurator::new(splash.clone())
+            .install(root)
+            .map_err(ConfigureError::Splash)
     }
 
     /// Включает настройку первой загрузки, если она объявлена.
@@ -244,7 +266,11 @@ impl SystemConfigurator {
         let path = root.join(NETPLAN_FILE);
         write_file(
             &path,
-            &render_netplan(&self.spec.dhcp_interfaces, &self.spec.wifi),
+            &render_netplan(
+                &self.spec.dhcp_interfaces,
+                &self.spec.wifi,
+                &self.spec.renderer,
+            ),
         )?;
 
         // netplan отказывается применять конфигурацию, доступную на чтение
@@ -364,10 +390,14 @@ fn render_fstab(filesystems: &[Filesystem]) -> String {
 }
 
 /// Формирует конфигурацию netplan для интерфейсов с DHCP.
-fn render_netplan(interfaces: &[String], wifi: &[WifiNetwork]) -> String {
-    let mut netplan = String::from(
+fn render_netplan(interfaces: &[String], wifi: &[WifiNetwork], renderer: &str) -> String {
+    // Backend обязан совпадать с тем, что реально запущен в образе. netplan
+    // лишь генерирует настройки для указанного: если его нет, конфигурация
+    // молча не применяется. Так и вышло на Pi 5 — Plasma принесла
+    // NetworkManager, networkd остался выключен, и Wi-Fi не поднимался.
+    let mut netplan = format!(
         "# Platinum OS: файл создан сборкой, ручные правки будут перезаписаны.\n\
-         network:\n  version: 2\n  renderer: networkd\n",
+         network:\n  version: 2\n  renderer: {renderer}\n"
     );
 
     if !interfaces.is_empty() {
@@ -459,8 +489,9 @@ mod tests {
         )
         .expect("сеть должна быть корректной");
 
-        let netplan = render_netplan(&[], &[network]);
+        let netplan = render_netplan(&[], &[network], "NetworkManager");
 
+        assert!(netplan.contains("renderer: NetworkManager\n"));
         assert!(netplan.contains("  wifis:\n"));
         // Имя интерфейса, а не match: networkd отвергает match для Wi-Fi.
         assert!(netplan.contains("    wlan0:\n"));
@@ -493,7 +524,7 @@ mod tests {
 
     #[test]
     fn renders_netplan_for_each_interface() {
-        let netplan = render_netplan(&["end0".to_owned()], &[]);
+        let netplan = render_netplan(&["end0".to_owned()], &[], "networkd");
 
         assert!(netplan.contains("    end0:\n      dhcp4: true\n"));
         assert!(netplan.contains("renderer: networkd"));

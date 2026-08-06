@@ -1,0 +1,27 @@
+# Разметка образа для машины с UEFI.
+#
+# В сырые сектора не пишется ничего: загрузчик приходит с прошивкой. 1 MiB —
+# только под таблицу разделов и выравнивание.
+reserved_mib = 1
+
+# ESP: прошивка ищет раздел по коду типа 0xEF, а не по файловой системе, и
+# помеченный обычным FAT пропустит — отсюда флаг esp.
+[[partitions]]
+name = "esp"
+label = "PLTMEFI"
+filesystem = "fat32"
+start_mib = 1
+size_mib = 512
+mount_point = "/boot/efi"
+bootable = true
+esp = true
+pass = 2
+
+[[partitions]]
+name = "root"
+label = "platinum-root"
+filesystem = "ext4"
+start_mib = 513
+size_mib = 8192
+mount_point = "/"
+pass = 1

@@ -139,7 +139,7 @@ impl BuildEngine {
 
             // Настройка идёт перед сборкой образа: всё, что изменено позже, в
             // файловую систему образа уже не попадёт.
-            pipeline.add(ConfigureSystemStage::new(architecture, spec));
+            pipeline.add(ConfigureSystemStage::new(architecture.clone(), spec));
         }
 
         // Конфигурация загрузки нужна там, где в rootfs окажется ядро и есть
@@ -152,7 +152,12 @@ impl BuildEngine {
             let spec = boot_spec(partitions, &boot)
                 .with_context(|| format!("некорректные параметры загрузки платы `{id}`"))?;
 
-            pipeline.add(ConfigureBootStage::new(spec, &bootloader, dtb));
+            pipeline.add(ConfigureBootStage::new(
+                spec,
+                &bootloader,
+                dtb,
+                architecture.clone(),
+            ));
         }
 
         if let Some(layout) = layout {

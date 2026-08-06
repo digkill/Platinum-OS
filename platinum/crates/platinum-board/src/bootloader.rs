@@ -25,6 +25,11 @@ pub enum BootloaderConfig {
     /// Загрузчик живёт в SPI EEPROM платы, поэтому в сырые сектора образа не
     /// пишется ничего, а ядро и DTB читает сама прошивка ещё до запуска ядра.
     RaspberryPi(RaspberryPiConfig),
+    /// Прошивка UEFI и GRUB на разделе ESP.
+    ///
+    /// Способ для машин, где загрузчик приходит с прошивкой: виртуальных
+    /// (Parallels, QEMU с EDK2) и обычных arm64-компьютеров.
+    Uefi(UefiBootConfig),
 }
 
 impl BootloaderConfig {
@@ -33,8 +38,16 @@ impl BootloaderConfig {
     /// U-Boot живёт до таблицы разделов и переносится сборкой; прошивка
     /// Raspberry Pi лежит в EEPROM платы, и записывать в образ нечего.
     pub fn writes_raw_sectors(&self) -> bool {
-        !matches!(self, Self::RaspberryPi(_))
+        !matches!(self, Self::RaspberryPi(_) | Self::Uefi(_))
     }
+}
+
+/// Данные загрузки через UEFI.
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct UefiBootConfig {
+    /// Точка монтирования раздела ESP.
+    pub esp_mount_point: String,
 }
 
 /// Данные загрузки платы Raspberry Pi.

@@ -50,6 +50,12 @@ pub struct PartitionConfig {
     /// Отмечать ли раздел активным в таблице разделов.
     #[serde(default)]
     pub bootable: bool,
+    /// Является ли раздел ESP — системным разделом UEFI.
+    ///
+    /// Меняет только код типа в таблице разделов: прошивка ищет ESP именно по
+    /// нему, а раздел с обычным типом FAT пропустит.
+    #[serde(default)]
+    pub esp: bool,
     /// Опции монтирования для fstab.
     #[serde(default = "default_mount_options")]
     pub options: String,
