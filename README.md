@@ -1,53 +1,63 @@
 # Platinum OS One
 
-Platinum OS One — универсальная Linux-платформа и build-система на Rust для
-создания bootable images. Базовый userspace — Ubuntu Base 26.04 LTS, поверх
-которого будут устанавливаться собственные пакеты Platinum.
+[English](README.md) | [Русский](README.ru.md) | [中文](README.zh-CN.md)
 
-Первая поддерживаемая плата — Orange Pi Zero 3W. Архитектура не привязана к
-ней: цель проекта — одна OS для смартфонов, планшетов, ПК, роботов и других
-устройств с подходящим board-specific BSP.
+Platinum OS One is a universal Linux platform and a Rust build system for
+bootable images. The shared userspace is Ubuntu Base 26.04 LTS, with Platinum
+packages layered on top.
+
+The first supported board is Orange Pi Zero 3W. The architecture is not tied to
+that board: the goal is one OS for phones, tablets, PCs, robots, and other
+devices with a suitable board-specific BSP.
 
 ```text
 CLI → BuildEngine → Pipeline → Stage
 ```
 
-Проект отделяет универсальную логику сборки от BSP конкретной платы:
+The project keeps generic build logic separate from board BSP data:
 
-- `platinum-core` содержит общие contracts pipeline;
-- `platinum-builder` оркестрирует stages;
-- `platinum/boards/<board-id>/` хранит TOML-данные платы;
-- BuildEngine не содержит условий для Orange Pi, Raspberry Pi или иных плат.
+- `platinum-core` owns the pipeline contracts;
+- `platinum-builder` orchestrates stages;
+- `platinum/boards/<board-id>/` stores board TOML data;
+- `BuildEngine` has no Orange Pi, Raspberry Pi, or other board-specific
+  branches.
 
-Каждая плата поставляет только данные и BSP: загрузчик, kernel, Device Tree,
-firmware и configuration. Это позволяет сохранять единый Ubuntu userspace и
-набор пакетов Platinum на разных классах устройств.
+Each board contributes only data and BSP artifacts: bootloader, kernel, Device
+Tree, firmware, and configuration. That keeps one Ubuntu userspace and one
+Platinum package set across device classes.
 
-## Быстрый запуск
+## Quick start
 
 ```bash
 cd platinum
 cargo build
 cargo test
 cargo run -p platinum-cli -- version
+cargo run -p platinum-cli -- help
+```
+
+Board BSP helpers:
+
+```bash
 cargo run -p platinum-cli -- bsp-sync boards/orangepi-zero3w/board.toml /absolute/path/to/armbian-cache
 cargo run -p platinum-cli -- bsp-build-kernel boards/orangepi-zero3w/board.toml /absolute/path/to/armbian-cache
 ```
 
-На текущем этапе команда `build` подготавливает явно заданные директории
-сборки:
+The current `build` command prepares explicitly provided directories:
 
 ```bash
 cargo run -p platinum-cli -- build <work-dir> <downloads-dir> <cache-dir> <output-dir>
 ```
 
-`bsp-sync` клонирует Armbian Build только в явно переданный каталог cache и
-проверяет pinned Git commit из `board.toml`.
+`bsp-sync` clones Armbian Build into the given cache directory and verifies the
+pinned Git commit from `board.toml`.
 
-`bsp-build-kernel` сначала выполняет такую же проверку checkout, затем запускает
-Armbian target `kernel` для kernel и DTB. Команда пока не создаёт финальный
-Platinum image и не подменяет Ubuntu Base rootfs Armbian-образом.
+`bsp-build-kernel` performs the same checkout checks, then runs the Armbian
+`kernel` target for kernel and DTB. It does not yet create the final Platinum
+image and does not replace the Ubuntu Base rootfs with an Armbian image.
 
-Подробные архитектурные правила: `AGENTS.md` (Cursor) и `CLAUDE.md` (Claude).
-Оперативная память: `dev-ai.md`. Cursor rules: `.cursor/rules/platinum-os.mdc`
-и `.cursor/rules/armbian-zero3w.mdc`.
+## Agent docs
+
+- Cursor rules: `AGENTS.md`, `.cursor/rules/`
+- Claude memory: `CLAUDE.md`
+- Working status: `dev-ai.md`
