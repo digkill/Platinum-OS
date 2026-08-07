@@ -370,7 +370,7 @@ checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 
 [[package]]
 name = "platinum-armbian-bsp"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "platinum-board",
  "thiserror",
@@ -379,7 +379,7 @@ dependencies = [
 
 [[package]]
 name = "platinum-board"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "serde",
  "thiserror",
@@ -388,7 +388,7 @@ dependencies = [
 
 [[package]]
 name = "platinum-builder"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "platinum-armbian-bsp",
@@ -402,7 +402,7 @@ dependencies = [
 
 [[package]]
 name = "platinum-cli"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -416,7 +416,7 @@ dependencies = [
 
 [[package]]
 name = "platinum-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "thiserror",
@@ -425,7 +425,7 @@ dependencies = [
 
 [[package]]
 name = "platinum-downloader"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "sha2",
  "thiserror",
@@ -435,7 +435,7 @@ dependencies = [
 
 [[package]]
 name = "platinum-image"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "thiserror",
  "tracing",
@@ -443,7 +443,7 @@ dependencies = [
 
 [[package]]
 name = "platinum-logger"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "thiserror",
  "tracing-subscriber",
@@ -451,7 +451,7 @@ dependencies = [
 
 [[package]]
 name = "platinum-rootfs"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "thiserror",
  "tracing",
@@ -459,7 +459,7 @@ dependencies = [
 
 [[package]]
 name = "platinum-utils"
-version = "0.1.0"
+version = "0.2.0"
 
 [[package]]
 name = "proc-macro2"

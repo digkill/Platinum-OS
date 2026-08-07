@@ -147,6 +147,14 @@ Rectangle {
                     visible: !Navigation.inApp && Navigation.surface === "apps"
                 }
 
+                // Окна нативных приложений. Невидимая поверхность не
+                // уничтожает окна: приложения продолжают жить, пока
+                // пользователь дома.
+                WindowHost {
+                    anchors.fill: parent
+                    visible: !Navigation.inApp && Navigation.surface === "window"
+                }
+
                 AppHost {
                     anchors.fill: parent
                     visible: Navigation.inApp

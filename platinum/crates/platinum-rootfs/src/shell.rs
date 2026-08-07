@@ -16,6 +16,8 @@ use std::{
 use thiserror::Error;
 use tracing::info;
 
+use crate::console_agent::{ConsoleAgent, ConsoleAgentError};
+use crate::launcher_agent::{LauncherAgent, LauncherAgentError};
 use crate::settings_agent::{SettingsAgent, SettingsAgentError};
 
 /// Каталог drop-in конфигурации display manager.
@@ -75,6 +77,12 @@ pub enum ShellError {
     /// Посредника для системных настроек не удалось поставить.
     #[error(transparent)]
     SettingsAgent(#[from] SettingsAgentError),
+    /// Службу консоли не удалось поставить.
+    #[error(transparent)]
+    ConsoleAgent(#[from] ConsoleAgentError),
+    /// Службу запуска приложений не удалось поставить.
+    #[error(transparent)]
+    LauncherAgent(#[from] LauncherAgentError),
 }
 
 /// Параметры графической оболочки.
@@ -172,6 +180,14 @@ impl ShellConfigurator {
         };
 
         SettingsAgent::new(user.clone())?.apply(rootfs)?;
+
+        // Консоль выполняет команды от пользователя оболочки, поэтому её
+        // служба ставится рядом и тоже только при автоматическом входе.
+        ConsoleAgent::new().apply(rootfs)?;
+
+        // Запуск приложений — та же схема: оболочка пишет заявку, служба
+        // пользователя запускает процесс с сокетом композитора оболочки.
+        LauncherAgent::new().apply(rootfs)?;
 
         Ok(())
     }
@@ -301,7 +317,10 @@ const LAUNCHER: &str = r#"#!/bin/sh
 # Platinum OS: файл создан сборкой, ручные правки будут перезаписаны.
 set -eu
 
-HOME_QML=/usr/share/platinum/homescreen/Home.qml
+# Shell.qml — композитор: оболочка сама принимает окна приложений на свой
+# Wayland-сокет и показывает их в своей сцене. Cage при этом остаётся снаружи:
+# он даёт DRM, ввод и seat, чего вложенному композитору самому не нужно уметь.
+SHELL_QML=/usr/share/platinum/homescreen/Shell.qml
 
 for candidate in qml6 /usr/lib/qt6/bin/qml qml; do
     if command -v "$candidate" > /dev/null 2>&1; then
@@ -319,7 +338,7 @@ QML_XHR_ALLOW_FILE_READ=1
 export QML_XHR_ALLOW_FILE_READ
 
 # cage -d: композитор-киоск на всё окно, без панелей и декораций.
-exec cage -d -- "$QML" -I /usr/share/platinum/homescreen "$HOME_QML"
+exec cage -d -- "$QML" -I /usr/share/platinum/homescreen "$SHELL_QML"
 "#;
 
 /// Файл сессии Wayland для display manager.
@@ -389,6 +408,9 @@ mod tests {
     fn launcher_probes_several_qml_binaries() {
         assert!(super::LAUNCHER.contains("for candidate in qml6"));
         assert!(super::LAUNCHER.contains("cage -d --"));
+        // Запускается корень-композитор, а не голый домашний экран: без него
+        // окна приложений открывались бы поверх оболочки, минуя её сцену.
+        assert!(super::LAUNCHER.contains("Shell.qml"));
         assert!(
             super::LAUNCHER.contains("не найден исполняемый файл qml"),
             "отсутствие qml обязано быть сообщением, а не пустым экраном"

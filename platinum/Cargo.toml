@@ -18,7 +18,7 @@ members = [
 # продукт, поэтому расхождение метаданных между crates создавало бы ложное
 # впечатление независимых релизов.
 [workspace.package]
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 rust-version = "1.85"
 license = "Apache-2.0"
@@ -37,15 +37,15 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 ureq = "3.3"
 
-platinum-armbian-bsp = { path = "crates/platinum-armbian-bsp", version = "0.1.0" }
-platinum-board = { path = "crates/platinum-board", version = "0.1.0" }
-platinum-builder = { path = "crates/platinum-builder", version = "0.1.0" }
-platinum-core = { path = "crates/platinum-core", version = "0.1.0" }
-platinum-downloader = { path = "crates/platinum-downloader", version = "0.1.0" }
-platinum-image = { path = "crates/platinum-image", version = "0.1.0" }
-platinum-logger = { path = "crates/platinum-logger", version = "0.1.0" }
-platinum-rootfs = { path = "crates/platinum-rootfs", version = "0.1.0" }
-platinum-utils = { path = "crates/platinum-utils", version = "0.1.0" }
+platinum-armbian-bsp = { path = "crates/platinum-armbian-bsp", version = "0.2.0" }
+platinum-board = { path = "crates/platinum-board", version = "0.2.0" }
+platinum-builder = { path = "crates/platinum-builder", version = "0.2.0" }
+platinum-core = { path = "crates/platinum-core", version = "0.2.0" }
+platinum-downloader = { path = "crates/platinum-downloader", version = "0.2.0" }
+platinum-image = { path = "crates/platinum-image", version = "0.2.0" }
+platinum-logger = { path = "crates/platinum-logger", version = "0.2.0" }
+platinum-rootfs = { path = "crates/platinum-rootfs", version = "0.2.0" }
+platinum-utils = { path = "crates/platinum-utils", version = "0.2.0" }
 
 # Публичный API документируется всегда, а unsafe запрещён на уровне workspace:
 # у build-системы нет задач, которые нельзя решить безопасным Rust.

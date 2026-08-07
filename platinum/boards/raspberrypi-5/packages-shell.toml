@@ -79,6 +79,18 @@ install = [
     "qml6-module-qtquick-window",
     "qml6-module-qtquick-shapes",
     "qml6-module-qtquick-effects",
+    # QtCore для QML: Settings — этим модулем оболочка хранит тему и настройки
+    "qml6-module-qtcore",
+
+    # оболочка — вложенный Wayland-композитор: модуль сцены чужих окон и
+    # клиентская платформа Wayland для Qt-приложений
+    "qml6-module-qtwayland-compositor",
+    "qt6-wayland",
+
+    # первое нативное приложение: терминал на Qt. Не foot: он требует wl_seat
+    # v5 и wl_data_device_manager v3, а композитор QtWayland отдаёт v4 и v1 —
+    # foot отказывается стартовать (проверено живым запуском 2026-08-07)
+    "qterminal",
 
     # драйверы GPU: VideoCore VII с открытым v3d/vc4, ускорение аппаратное
     "libgl1-mesa-dri",

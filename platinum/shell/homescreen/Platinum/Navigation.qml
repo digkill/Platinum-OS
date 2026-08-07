@@ -10,7 +10,7 @@ import QtQuick
 QtObject {
     id: navigation
 
-    // Поверхность оболочки: "home" или "apps".
+    // Поверхность оболочки: "home", "apps" или "window" — окна приложений.
     property string surface: "home"
 
     // Открытое приложение; пусто — показана поверхность.
@@ -27,6 +27,15 @@ QtObject {
 
     /// Открывает приложение по идентификатору с необязательными данными.
     function open(id, data) {
+        // Нативное приложение: QML-экрана у него нет, окно придёт от
+        // композитора — реестр помечает такие поле `exec`.
+        const module = Apps.find(id);
+        if (module !== undefined && module.exec !== undefined) {
+            Windows.launch(module.exec);
+
+            return;
+        }
+
         navigation.payload = data === undefined ? null : data;
         navigation.app = id;
     }

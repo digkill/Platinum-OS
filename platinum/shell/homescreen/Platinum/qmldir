@@ -6,6 +6,8 @@ singleton Apps 1.0 Apps.qml
 singleton Navigation 1.0 Navigation.qml
 singleton SystemSettings 1.0 SystemSettings.qml
 singleton Timezones 1.0 Timezones.qml
+singleton Console 1.0 Console.qml
+singleton Windows 1.0 Windows.qml
 GlassPanel 1.0 GlassPanel.qml
 StatusBar 1.0 StatusBar.qml
 ClockWidget 1.0 ClockWidget.qml
@@ -31,3 +33,5 @@ MessageScreen 1.0 MessageScreen.qml
 SettingsScreen 1.0 SettingsScreen.qml
 AiScreen 1.0 AiScreen.qml
 TimezoneScreen 1.0 TimezoneScreen.qml
+ConsoleScreen 1.0 ConsoleScreen.qml
+WindowHost 1.0 WindowHost.qml
