@@ -348,6 +348,21 @@ export QML_XHR_ALLOW_FILE_READ
 QT_IM_MODULES=qtvirtualkeyboard
 export QT_IM_MODULES
 
+# Указатель мыши. Без имени темы курсора и cage, и Qt ищут тему `default`,
+# которой в Ubuntu Base нет: мышь работает, но указателя на экране не видно.
+# Тема выбирается из установленных, а не зашита: жёсткое имя исчезло бы вместе
+# с чужим пакетом, и указатель пропал бы снова.
+for theme in breeze_cursors Adwaita default; do
+    if [ -d "/usr/share/icons/$theme/cursors" ]; then
+        XCURSOR_THEME="$theme"
+        export XCURSOR_THEME
+        break
+    fi
+done
+
+XCURSOR_SIZE="${XCURSOR_SIZE:-24}"
+export XCURSOR_SIZE
+
 # cage -d: композитор-киоск на всё окно, без панелей и декораций.
 exec cage -d -- "$QML" -I /usr/share/platinum/homescreen "$SHELL_QML"
 "#;
@@ -433,6 +448,10 @@ mod tests {
         // клавиатуру, и с QT_IM_MODULE панель не появляется вовсе (поймано на
         // живой машине по журналу сессии).
         assert!(super::LAUNCHER.contains("QT_IM_MODULES=qtvirtualkeyboard"));
+        // Без темы курсора указателя мыши на экране нет вовсе, а имя темы
+        // обязано проверяться: зашитое исчезнет вместе с чужим пакетом.
+        assert!(super::LAUNCHER.contains("XCURSOR_THEME"));
+        assert!(super::LAUNCHER.contains("/usr/share/icons/$theme/cursors"));
         assert!(
             !super::LAUNCHER.contains("QT_IM_MODULE="),
             "QT_IM_MODULE в единственном числе клиентская сторона отвергает"
