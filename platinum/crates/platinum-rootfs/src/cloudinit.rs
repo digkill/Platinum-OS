@@ -165,6 +165,13 @@ fn write(path: &Path, contents: &str) -> Result<(), CloudInitError> {
 /// по умолчанию, и в образе появился бы лишний пользователь `ubuntu` рядом с
 /// созданным сборкой. Значение перекрывается из `user-data`, если оператор
 /// действительно хочет своих пользователей.
+///
+/// `apt_preserve_sources_list: true` спасает apt устройства. Без него cloud-init
+/// при первой загрузке переписывает `ubuntu.sources` из своего шаблона, а
+/// codename берёт из `lsb_release`, которого в Ubuntu Base нет — в файле
+/// оказывается suite `UNAVAILABLE`, и ни один репозиторий не резолвится.
+/// Поймано на живой машине: apt в собранном образе был мёртв, хотя сборка
+/// ставила пакеты тем же apt успешно.
 fn render_config(spec: &CloudInitSpec) -> String {
     format!(
         "# Platinum OS: файл создан сборкой, ручные правки будут перезаписаны.\n\
@@ -176,7 +183,8 @@ fn render_config(spec: &CloudInitSpec) -> String {
          \x20 NoCloud:\n\
          \x20   fs_label: {}\n\
          users: []\n\
-         disable_root: true\n",
+         disable_root: true\n\
+         apt_preserve_sources_list: true\n",
         spec.filesystem_label
     )
 }
@@ -250,6 +258,17 @@ mod tests {
             .expect("корректное описание");
 
         assert!(render_config(&spec).contains("users: []\n"));
+    }
+
+    /// Без этого cloud-init переписывает `ubuntu.sources` своим шаблоном и
+    /// подставляет suite `UNAVAILABLE`: apt на устройстве перестаёт работать
+    /// полностью (поймано на живой машине 2026-08-07).
+    #[test]
+    fn keeps_the_package_sources_of_the_build() {
+        let spec = CloudInitSpec::new("/boot/firmware".into(), "PLTMBOOT".into())
+            .expect("корректное описание");
+
+        assert!(render_config(&spec).contains("apt_preserve_sources_list: true\n"));
     }
 
     /// Поставляемый seed обязан быть безоперационным: образ должен загружаться
