@@ -44,12 +44,32 @@ docker run --rm --privileged \
     arm64v8/ubuntu:24.04 sh -c '
 set -eu
 apt-get update -qq > /dev/null 2>&1
-apt-get install -y -qq rsync > /dev/null 2>&1
+apt-get install -y -qq rsync fdisk > /dev/null 2>&1
 
-loop=$(losetup -P -f --show /disk.img)
+# Разделы монтируются по смещению, а не через `losetup -P`.
+#
+# В виртуальной машине Docker Desktop нет udev, поэтому `losetup -P` создаёт
+# только само loop-устройство: файлов `/dev/loopNpM` не появляется и монтировать
+# нечего. Смещения читаются из таблицы разделов образа.
+table=$(fdisk -l -o Device,Start,Sectors /disk.img | awk "/^\/disk\.img[0-9]/ {print \$2, \$3}")
+esp_start=$(echo "$table" | sed -n 1p | cut -d" " -f1)
+esp_size=$(echo "$table" | sed -n 1p | cut -d" " -f2)
+root_start=$(echo "$table" | sed -n 2p | cut -d" " -f1)
+root_size=$(echo "$table" | sed -n 2p | cut -d" " -f2)
+
+[ -n "$root_start" ] || { echo "не разобрана таблица разделов" >&2; exit 1; }
+
+# Прерванный запуск оставляет loop-устройство: оно живёт в виртуальной машине
+# Docker, а не в контейнере, и переживает его завершение. Второй запуск иначе
+# падает на «overlapping loop device exists».
+losetup -j /disk.img | cut -d: -f1 | while read -r stale; do
+    umount "$stale" 2> /dev/null || true
+    losetup -d "$stale" || true
+done
+
 mkdir -p /mnt/root /mnt/esp
-mount "${loop}p2" /mnt/root
-mount "${loop}p1" /mnt/esp
+mount -o loop,offset=$((root_start * 512)),sizelimit=$((root_size * 512)) /disk.img /mnt/root
+mount -o loop,offset=$((esp_start * 512)),sizelimit=$((esp_size * 512)) /disk.img /mnt/esp
 
 case "$WHAT" in
     shell)
@@ -75,7 +95,6 @@ esac
 
 sync
 umount /mnt/esp /mnt/root
-losetup -d "$loop"
 ' || fail "обновление не выполнено"
 
 echo "Готово. Запустите машину в Parallels."
