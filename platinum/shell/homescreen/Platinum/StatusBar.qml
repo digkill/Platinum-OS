@@ -19,7 +19,7 @@ Item {
         text: bar.time
         font.pixelSize: 17
         font.weight: Font.DemiBold
-        color: Theme.textPrimary
+        color: Theme.statusText
     }
 
     // Вырез фронтальной камеры.
@@ -47,8 +47,8 @@ Item {
                     height: 4 + index * 3
                     radius: 1
                     anchors.bottom: parent.bottom
-                    color: index < bar.signalBars ? Theme.textPrimary
-                                                  : Qt.rgba(0, 0, 0, 0.22)
+                    color: index < bar.signalBars ? Theme.statusText
+                                                  : Theme.statusTextDim
                 }
             }
         }
@@ -60,8 +60,8 @@ Item {
             onPaint: {
                 const ctx = getContext("2d");
                 ctx.reset();
-                ctx.strokeStyle = bar.online ? Theme.textPrimary
-                                             : Qt.rgba(0, 0, 0, 0.25);
+                ctx.strokeStyle = bar.online ? Theme.statusText
+                                             : Theme.statusTextDim;
                 ctx.lineCap = "round";
                 for (let i = 0; i < 3; ++i) {
                     ctx.lineWidth = 1.8;
@@ -69,8 +69,8 @@ Item {
                     ctx.arc(width / 2, height, 3.5 + i * 4, Math.PI * 1.25, Math.PI * 1.75);
                     ctx.stroke();
                 }
-                ctx.fillStyle = bar.online ? Theme.textPrimary
-                                           : Qt.rgba(0, 0, 0, 0.25);
+                ctx.fillStyle = bar.online ? Theme.statusText
+                                           : Theme.statusTextDim;
                 ctx.beginPath();
                 ctx.arc(width / 2, height - 1, 1.4, 0, Math.PI * 2);
                 ctx.fill();
@@ -88,7 +88,7 @@ Item {
                 radius: 3.5
                 color: "transparent"
                 border.width: 1.4
-                border.color: Theme.textPrimary
+                border.color: Theme.statusText
 
                 Rectangle {
                     anchors.left: parent.left
@@ -99,7 +99,7 @@ Item {
                     radius: 2
                     // Зелёный при зарядке — единственный цветной элемент
                     // строки, поэтому читается сразу.
-                    color: bar.charging ? "#34c759" : Theme.textPrimary
+                    color: bar.charging ? "#34c759" : Theme.statusText
                 }
             }
 
@@ -107,8 +107,18 @@ Item {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
                 width: 2; height: 5; radius: 1
-                color: Theme.textPrimary
+                color: Theme.statusText
             }
+        }
+
+        // Проценты рядом со значком: по одной шкале заряда сложно отличить
+        // «почти полный» от «половина», а число читается сразу.
+        Text {
+            anchors.verticalCenter: parent.verticalCenter
+            text: Math.round(bar.battery * 100) + "%"
+            font.pixelSize: 16
+            font.weight: Font.DemiBold
+            color: Theme.statusText
         }
     }
 }

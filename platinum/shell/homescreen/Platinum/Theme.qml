@@ -57,15 +57,23 @@ QtObject {
     readonly property color textPrimary: dark ? "#f2f2f7" : "#1d1d2b"
     readonly property color textSecondary: dark ? Qt.rgba(1, 1, 1, 0.62)
                                                 : Qt.rgba(0.29, 0.29, 0.40, 0.72)
+    // Строка состояния белая на обеих темах: она лежит поверх самой светлой
+    // части градиента, и тёмный текст там выглядит грязным пятном.
+    readonly property color statusText: "#ffffff"
+    readonly property color statusTextDim: Qt.rgba(1, 1, 1, 0.55)
+
     readonly property color accent: dark ? "#8f8ae8" : "#6c5ce7"
     readonly property color accentSoft: dark ? "#a6a1f0" : "#8f8ae8"
 
     // Радиусы: иконки — «квадрат со скруглением», панели мягче.
-    readonly property int iconRadius: 22
+    readonly property int iconRadius: 30
     readonly property int panelRadius: 26
     readonly property int dockRadius: 32
 
-    readonly property int iconSize: 72
+    // Размер значка. Крупный намеренно: значок и есть плитка, а не картинка
+    // внутри подложки, и на экране устройства он должен читаться издалека.
+    readonly property int iconSize: 128
+    readonly property int dockIconSize: 84
     readonly property int gridColumns: 4
 
     readonly property int spacingSmall: 8

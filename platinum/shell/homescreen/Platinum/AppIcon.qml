@@ -1,6 +1,10 @@
 import QtQuick
 
-// Иконка приложения: стеклянная плитка и подпись под ней.
+// Значок приложения: цветная плитка и подпись под ней.
+//
+// Плитка — это сам значок, а не картинка внутри стеклянной подложки. Подложка
+// приглушала цвет и съедала четверть площади: на экране устройства значки
+// становились неразличимы издалека.
 Item {
     id: app
 
@@ -14,17 +18,44 @@ Item {
     signal activated()
 
     width: Theme.iconSize
-    height: Theme.iconSize + 26
+    height: Theme.iconSize + 28
 
-    GlassPanel {
+    Item {
         id: tile
+
         width: Theme.iconSize
         height: Theme.iconSize
-        radius: Theme.iconRadius
         anchors.horizontalCenter: parent.horizontalCenter
 
-        scale: press.pressed ? 0.93 : 1.0
+        scale: press.pressed ? 0.92 : 1.0
         Behavior on scale { NumberAnimation { duration: 90 } }
+
+        // Мягкая тень под плиткой: без неё значки на светлом фоне сливаются с
+        // ним. Рисуется прямоугольником со скруглением, а не размытием —
+        // MultiEffect при программном рендере не отрабатывает.
+        //
+        // Поля повторяют отступ внутри самого значка: рисунок занимает не всю
+        // клетку, и тень во всю ширину торчала бы из-под него серым квадратом.
+        Rectangle {
+            anchors.fill: parent
+            anchors.leftMargin: parent.width * 0.075
+            anchors.rightMargin: parent.width * 0.075
+            anchors.topMargin: parent.height * 0.11
+            anchors.bottomMargin: parent.height * 0.04
+            radius: Theme.iconRadius
+            color: Qt.rgba(0.35, 0.35, 0.55, 0.13)
+        }
+
+        // Запасная подложка: под значками без своего фона (эмодзи, чужая
+        // картинка) иначе просвечивал бы экран.
+        Rectangle {
+            anchors.fill: parent
+            visible: app.icon === ""
+            radius: Theme.iconRadius
+            color: Theme.glassFillStrong
+            border.width: 1
+            border.color: Theme.glassBorder
+        }
 
         Loader {
             anchors.centerIn: parent
@@ -32,14 +63,13 @@ Item {
             sourceComponent: app.artwork
         }
 
-        // Значок продукта имеет приоритет: эмодзи остаются запасным вариантом
-        // для приложений, которым свой значок ещё не нарисован.
+        // Значок продукта рисуется во всю плитку: фон и скругление у него свои.
         Image {
-            anchors.centerIn: parent
+            anchors.fill: parent
             visible: app.icon !== ""
             source: app.icon === "" ? "" : "../icons/" + app.icon + ".svg"
-            sourceSize.width: Theme.iconSize * 0.58
-            sourceSize.height: Theme.iconSize * 0.58
+            sourceSize.width: Theme.iconSize * 2
+            sourceSize.height: Theme.iconSize * 2
             smooth: true
         }
 
@@ -63,10 +93,10 @@ Item {
         anchors.topMargin: 7
         anchors.horizontalCenter: parent.horizontalCenter
         text: app.label
-        font.pixelSize: 12
+        font.pixelSize: 13
         color: Theme.textPrimary
         elide: Text.ElideRight
-        width: parent.width + 16
+        width: parent.width + 18
         horizontalAlignment: Text.AlignHCenter
     }
 }

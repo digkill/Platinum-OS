@@ -13,7 +13,7 @@ AppScreen {
 
     AppGrid {
         width: parent.width
-        model: Apps.modules
+        model: Apps.listed
         onLaunch: function (id) { Navigation.open(id); }
     }
 }

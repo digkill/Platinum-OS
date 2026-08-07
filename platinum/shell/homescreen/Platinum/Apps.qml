@@ -31,45 +31,44 @@ QtObject {
             screen: "ContactsScreen.qml"
         },
         {
-            id: "platinum", icon: "platinum-one-home", title: "Platinum OS",
+            id: "platinum", icon: "app-platinum", title: "Platinum OS",
             description: "Сведения о системе, сборке образа и устройстве."
         },
 
         {
-            id: "ai", icon: "ai-home", title: "AI Assistant",
+            id: "ai", icon: "app-ai", title: "AI",
             description: "Помощник: сводки, извлечение задач, черновики ответов.",
             screen: "AiScreen.qml"
         },
         {
-            id: "message", icon: "message", title: "Messages",
-            description: "Переписки, ретрансляция и синхронизация сообщений.",
-            screen: "MessageScreen.qml"
-        },
-        {
-            id: "files", icon: "apps", title: "Files",
-            description: "Файлы устройства и подключённых носителей."
-        },
-        {
-            id: "notes", icon: "apps", title: "Notes",
-            description: "Заметки и быстрые записи."
-        },
-
-        {
-            id: "gallery", icon: "apps", title: "Gallery",
-            description: "Снимки и записи с камеры устройства."
-        },
-        {
-            id: "settings", icon: "settings-home", title: "Settings",
-            description: "Оформление оболочки, состояние железа и профиль устройства.",
+            id: "settings", icon: "app-settings", title: "Settings",
+            description: "Оформление оболочки, дата и время, состояние железа.",
             screen: "SettingsScreen.qml"
         },
         {
-            id: "security", icon: "relay", title: "Security",
-            description: "Доступ, ключи и ретрансляция между устройствами."
+            id: "files", icon: "files", title: "Files",
+            description: "Файлы устройства и подключённых носителей."
         },
         {
-            id: "store", icon: "apps", title: "Store",
-            description: "Каталог приложений Platinum."
+            id: "gallery", icon: "gallery", title: "Gallery",
+            description: "Снимки и записи с камеры устройства."
+        },
+
+        {
+            id: "notes", icon: "notes", title: "Notes",
+            description: "Заметки и быстрые записи."
+        },
+        {
+            id: "music", icon: "music", title: "Music",
+            description: "Музыка на устройстве и в сети."
+        },
+        {
+            id: "browser", icon: "browser", title: "Browser",
+            description: "Просмотр веб-страниц."
+        },
+        {
+            id: "camera", icon: "camera", title: "Camera",
+            description: "Съёмка фото и видео."
         }
     ]
 
@@ -84,14 +83,24 @@ QtObject {
         { id: "message", icon: "dock-message", title: "Messages" }
     ]
 
-    // Звонилка в сетке приложений не показана: её место — в доке. Но открыть её
-    // можно и из списка контактов, поэтому описание нужно и ей.
-    readonly property var hidden: [
+    // Приложения, которых нет на домашнем экране: их место в доке. В общем
+    // списке приложений они всё равно показываются — это полноценные
+    // приложения, а не разделы.
+    readonly property var extra: [
         {
             id: "call", icon: "dock-call", title: "Call",
             description: "Набор номера и недавние вызовы.",
             screen: "CallScreen.qml"
         },
+        {
+            id: "message", icon: "dock-message", title: "Messages",
+            description: "Переписки, ретрансляция и синхронизация сообщений.",
+            screen: "MessageScreen.qml"
+        }
+    ]
+
+    // Разделы: открываются изнутри приложений и в списках не показываются.
+    readonly property var internal: [
         {
             id: "timezone", icon: "clock-home", title: "Часовой пояс",
             description: "Выбор часового пояса устройства.",
@@ -99,9 +108,12 @@ QtObject {
         }
     ]
 
+    /// Всё, что показывается в общем списке приложений.
+    readonly property var listed: apps.modules.concat(apps.extra)
+
     /// Возвращает описание приложения по идентификатору.
     function find(id) {
-        const all = apps.modules.concat(apps.hidden);
+        const all = apps.listed.concat(apps.internal);
 
         return all.find(function (module) { return module.id === id; });
     }

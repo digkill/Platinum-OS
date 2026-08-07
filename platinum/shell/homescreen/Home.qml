@@ -99,7 +99,7 @@ Rectangle {
                     ClockWidget {
                         id: clock
                         anchors.top: parent.top
-                        anchors.topMargin: 56
+                        anchors.topMargin: 18
                         anchors.horizontalCenter: parent.horizontalCenter
                         now: home.now
                     }
@@ -107,16 +107,23 @@ Rectangle {
                     PlatinumLogo {
                         id: logo
                         anchors.top: clock.bottom
-                        anchors.topMargin: 28
+                        anchors.topMargin: 14
                         anchors.horizontalCenter: parent.horizontalCenter
                         width: 300
-                        height: 260
+                        height: 250
+                    }
+
+                    PlatinumWordmark {
+                        id: wordmark
+                        anchors.top: logo.bottom
+                        anchors.topMargin: -10
+                        anchors.horizontalCenter: parent.horizontalCenter
                     }
 
                     AppGrid {
                         id: apps
-                        anchors.top: logo.bottom
-                        anchors.topMargin: 24
+                        anchors.top: wordmark.bottom
+                        anchors.topMargin: 26
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.leftMargin: Theme.screenMargin
@@ -128,14 +135,10 @@ Rectangle {
                         onLaunch: function (id) { Navigation.open(id); }
                     }
 
-                    FocusCard {
-                        id: focus
-                        anchors.top: apps.bottom
-                        anchors.topMargin: 26
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.leftMargin: Theme.screenMargin
-                        anchors.rightMargin: Theme.screenMargin
+                    PageDots {
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: 4
+                        anchors.horizontalCenter: parent.horizontalCenter
                     }
                 }
 
