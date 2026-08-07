@@ -122,8 +122,32 @@ QtObject {
         }
     ]
 
+    // Приложения, описанные в самой оболочке: свои экраны и свои значки.
+    readonly property var curated: apps.modules.concat(apps.extra)
+
+    // Найденные в системе приложения, кроме тех, что уже есть в реестре со
+    // своим значком: qterminal иначе показался бы дважды — своей плиткой и
+    // записью из `.desktop`.
+    readonly property var discovered: Installed.list.filter(function (entry) {
+        return !apps.curated.some(function (module) {
+            return module.exec !== undefined
+                   && apps.binary(module.exec) === apps.binary(entry.exec);
+        });
+    })
+
     /// Всё, что показывается в общем списке приложений.
-    readonly property var listed: apps.modules.concat(apps.extra)
+    readonly property var listed: apps.curated.concat(apps.discovered)
+
+    /// Возвращает имя исполняемого файла из команды запуска.
+    function binary(exec) {
+        if (exec === undefined || exec === "") {
+            return "";
+        }
+
+        const first = exec.trim().split(" ")[0];
+
+        return first.substring(first.lastIndexOf("/") + 1);
+    }
 
     /// Возвращает описание приложения по идентификатору.
     function find(id) {

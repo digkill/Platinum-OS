@@ -8,6 +8,7 @@ singleton SystemSettings 1.0 SystemSettings.qml
 singleton Timezones 1.0 Timezones.qml
 singleton Console 1.0 Console.qml
 singleton Windows 1.0 Windows.qml
+singleton Installed 1.0 Installed.qml
 GlassPanel 1.0 GlassPanel.qml
 StatusBar 1.0 StatusBar.qml
 ClockWidget 1.0 ClockWidget.qml

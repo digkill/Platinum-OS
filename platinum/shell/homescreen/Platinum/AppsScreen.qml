@@ -9,7 +9,10 @@ AppScreen {
     id: screen
 
     title: "Приложения"
-    subtitle: "Всё, что установлено на устройстве."
+    subtitle: Apps.discovered.length > 0
+              ? "Всё, что установлено на устройстве: " + Apps.listed.length
+                + ", из них найдено в системе " + Apps.discovered.length + "."
+              : "Всё, что установлено на устройстве."
 
     AppGrid {
         width: parent.width
