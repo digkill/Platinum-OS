@@ -46,8 +46,17 @@ QtObject {
         const found = [];
 
         for (let index = 0; index < installed.folder.count; index += 1) {
-            const entry = parse(installed.folder.get(index, "fileURL").toString(),
-                                installed.folder.get(index, "fileBaseName"));
+            // Путь собирается из имени файла, а не берётся ролью `fileUrl`:
+            // роль в Qt 6 переименовалась (в Qt 5 была `fileURL`), и опора на
+            // её имя уже стоила молча пустого списка приложений на живой
+            // машине. Каталог мы задали сами, имени файла достаточно.
+            const name = installed.folder.get(index, "fileName");
+            if (name === undefined || name === "") {
+                continue;
+            }
+
+            const entry = parse("file://" + installed.directory + "/" + name,
+                                name.replace(/\.desktop$/, ""));
             if (entry !== null) {
                 found.push(entry);
             }
