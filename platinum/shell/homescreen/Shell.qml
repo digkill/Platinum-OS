@@ -1,6 +1,7 @@
 import QtQuick
 import QtWayland.Compositor
 import QtWayland.Compositor.XdgShell
+import QtQuick.VirtualKeyboard
 import Platinum
 
 // Корень оболочки: вложенный Wayland-композитор.
@@ -27,6 +28,26 @@ WaylandCompositor {
 
             Home {
                 anchors.fill: parent
+            }
+
+            // Экранная клавиатура. Живёт у композитора, а не внутри Home:
+            // отсюда она обслуживает и поля самой оболочки, и окна приложений
+            // Ubuntu — клиент получает ввод по протоколу text-input, и вторая
+            // клавиатура внутри каждого приложения не нужна.
+            //
+            // Панель поверх всего и вне холста Home: холст масштабируется под
+            // разрешение экрана, а клавиатуру пальцу надо показывать в
+            // настоящих пикселях, иначе на мониторе она уезжает вместе с ним.
+            InputPanel {
+                id: keyboard
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                z: 100
+
+                // Панель выезжает снизу и не занимает места, когда не нужна.
+                y: active ? parent.height - height : parent.height
+                Behavior on y { NumberAnimation { duration: 140 } }
             }
         }
     }

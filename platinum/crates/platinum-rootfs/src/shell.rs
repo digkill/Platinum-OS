@@ -337,6 +337,12 @@ done
 QML_XHR_ALLOW_FILE_READ=1
 export QML_XHR_ALLOW_FILE_READ
 
+# Экранная клавиатура: у устройства с сенсорным экраном другой нет. Модуль
+# ввода включается переменной — без неё InputPanel в сцене композитора
+# отрисуется, но ни одно поле её не вызовет.
+QT_IM_MODULE=qtvirtualkeyboard
+export QT_IM_MODULE
+
 # cage -d: композитор-киоск на всё окно, без панелей и декораций.
 exec cage -d -- "$QML" -I /usr/share/platinum/homescreen "$SHELL_QML"
 "#;
@@ -418,6 +424,9 @@ mod tests {
         // Без этой переменной Qt запрещает чтение sysfs, и строка состояния
         // молча показывает значения по умолчанию.
         assert!(super::LAUNCHER.contains("QML_XHR_ALLOW_FILE_READ=1"));
+        // Без модуля ввода экранная клавиатура рисуется, но не вызывается ни
+        // одним полем — а другой клавиатуры у устройства нет.
+        assert!(super::LAUNCHER.contains("QT_IM_MODULE=qtvirtualkeyboard"));
     }
 
     #[test]

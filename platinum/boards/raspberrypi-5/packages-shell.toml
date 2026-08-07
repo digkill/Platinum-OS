@@ -65,7 +65,7 @@ install = [
     "kwin-wayland",
     "sddm",
 
-    # экранная клавиатура: на устройстве с тачем другой нет
+    # экранная клавиатура Plasma Mobile; собственная оболочка её не использует
     "maliit-keyboard",
 
     # собственная оболочка: композитор-киоск и runtime QML
@@ -86,6 +86,12 @@ install = [
     # клиентская платформа Wayland для Qt-приложений
     "qml6-module-qtwayland-compositor",
     "qt6-wayland",
+
+    # экранная клавиатура оболочки: панель живёт у композитора и обслуживает
+    # и поля оболочки, и окна приложений. Не maliit: тот отдельный клиент со
+    # своим протоколом, а эта панель — часть сцены, которую мы рисуем
+    "qml6-module-qtquick-virtualkeyboard",
+    "qt6-virtualkeyboard-plugin",
 
     # первое нативное приложение: терминал на Qt. Не foot: он требует wl_seat
     # v5 и wl_data_device_manager v3, а композитор QtWayland отдаёт v4 и v1 —
