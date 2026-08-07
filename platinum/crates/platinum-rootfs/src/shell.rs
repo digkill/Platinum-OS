@@ -337,11 +337,16 @@ done
 QML_XHR_ALLOW_FILE_READ=1
 export QML_XHR_ALLOW_FILE_READ
 
-# Экранная клавиатура: у устройства с сенсорным экраном другой нет. Модуль
-# ввода включается переменной — без неё InputPanel в сцене композитора
-# отрисуется, но ни одно поле её не вызовет.
-QT_IM_MODULE=qtvirtualkeyboard
-export QT_IM_MODULE
+# Экранная клавиатура: у устройства с сенсорным экраном другой нет.
+#
+# Именно QT_IM_MODULES, во множественном числе. Оболочка запущена клиентом
+# внутри cage, и на клиентской стороне Qt отвергает виртуальную клавиатуру:
+# «qtvirtualkeyboard currently is not supported at client-side, use
+# QT_IM_MODULES=qtvirtualkeyboard at compositor-side» — сообщение из журнала
+# сессии живой машины. Клавиатуру поднимает сторона композитора, которой мы и
+# являемся для окон приложений.
+QT_IM_MODULES=qtvirtualkeyboard
+export QT_IM_MODULES
 
 # cage -d: композитор-киоск на всё окно, без панелей и декораций.
 exec cage -d -- "$QML" -I /usr/share/platinum/homescreen "$SHELL_QML"
@@ -424,9 +429,14 @@ mod tests {
         // Без этой переменной Qt запрещает чтение sysfs, и строка состояния
         // молча показывает значения по умолчанию.
         assert!(super::LAUNCHER.contains("QML_XHR_ALLOW_FILE_READ=1"));
-        // Без модуля ввода экранная клавиатура рисуется, но не вызывается ни
-        // одним полем — а другой клавиатуры у устройства нет.
-        assert!(super::LAUNCHER.contains("QT_IM_MODULE=qtvirtualkeyboard"));
+        // Именно QT_IM_MODULES: на клиентской стороне Qt отвергает виртуальную
+        // клавиатуру, и с QT_IM_MODULE панель не появляется вовсе (поймано на
+        // живой машине по журналу сессии).
+        assert!(super::LAUNCHER.contains("QT_IM_MODULES=qtvirtualkeyboard"));
+        assert!(
+            !super::LAUNCHER.contains("QT_IM_MODULE="),
+            "QT_IM_MODULE в единственном числе клиентская сторона отвергает"
+        );
     }
 
     #[test]
