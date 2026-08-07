@@ -1,17 +1,35 @@
 import QtQuick
 
 // Нижний док: постоянные приложения поверх стеклянной подложки.
+//
+// Панель обнимает значки, а не растягивается по ширине экрана — как док в
+// macOS. Промежутки при этом постоянные, а не вычисляются из свободного места:
+// иначе четыре значка расползались бы по краям, а пятый неожиданно сжимал бы
+// весь ряд. Ширина панели меняется вместе с числом значков, и это правильно:
+// док показывает свой состав, а не заполняет экран.
 GlassPanel {
     id: dock
 
     property alias model: repeater.model
 
-    height: 112
+    /// Поля панели вокруг ряда значков.
+    readonly property int padding: 16
+
+    /// Промежуток между значками.
+    readonly property int gap: 18
+
+    implicitWidth: row.width + padding * 2
+    implicitHeight: Theme.dockIconSize + padding * 2
+
+    width: implicitWidth
+    height: implicitHeight
     radius: Theme.dockRadius
 
     Row {
+        id: row
+
         anchors.centerIn: parent
-        spacing: (dock.width - Theme.dockIconSize * repeater.count - 32) / Math.max(1, repeater.count - 1)
+        spacing: dock.gap
 
         Repeater {
             id: repeater

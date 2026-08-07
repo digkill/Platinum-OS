@@ -153,15 +153,15 @@ Rectangle {
                 }
             }
 
+            // Док центрируется и держит ширину по своему содержимому: привязка
+            // к обоим краям растягивала бы его на весь экран, а значки внутри
+            // расползались бы по углам.
             Dock {
                 id: dock
 
                 anchors.bottom: indicator.top
                 anchors.bottomMargin: 14
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.leftMargin: Theme.screenMargin
-                anchors.rightMargin: Theme.screenMargin
+                anchors.horizontalCenter: parent.horizontalCenter
 
                 model: Apps.dock
             }
