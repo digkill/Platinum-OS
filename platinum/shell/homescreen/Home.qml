@@ -14,12 +14,7 @@ Rectangle {
     width: 720
     height: 1280
 
-    // Холст фиксированной пропорции, вписанный в экран.
-    //
-    // Без него на ландшафтном мониторе сетка растягивается по всей ширине, а
-    // карточка Focus и док наезжают друг на друга — проверено запуском в QEMU
-    // на 1920x1080. Экран устройства портретный, поэтому компоновка считается
-    // в его координатах, а на чужом разрешении холст масштабируется целиком.
+    // Единицы раскладки: экран устройства. Всё остальное считается в них.
     readonly property int designWidth: 720
     readonly property int designHeight: 1280
 
@@ -29,11 +24,20 @@ Rectangle {
     readonly property bool landscape: width > height
 
     // Как вести себя на ландшафтном экране:
-    //   "adapt"  — своя горизонтальная раскладка (по умолчанию)
-    //   "rotate" — развернуть портретную; для панели, установленной боком
+    //   "adapt"  — оставить портретную раскладку, добрав место полями
+    //   "rotate" — развернуть её; для панели, установленной боком
     property string landscapeMode: "adapt"
 
     readonly property bool rotated: landscape && landscapeMode === "rotate"
+
+    // Масштаб раскладки: по узкой стороне, поэтому содержимое не обрезается.
+    //
+    // Раньше холст просто занимал экран, а раскладка считалась в пикселях: на
+    // мониторе 1024x768 сетка наезжала на док, а низ экрана уходил за край.
+    // Поймано на живой машине в Parallels.
+    readonly property real canvasScale: rotated
+                                        ? Math.min(width / designHeight, height / designWidth)
+                                        : Math.min(width / designWidth, height / designHeight)
 
     // Фон: мягкий градиент, поверх которого «стекло» читается без размытия.
     gradient: Gradient {
@@ -49,130 +53,135 @@ Rectangle {
     Item {
         id: canvas
 
-        // В режиме adapt холст занимает экран целиком и раскладка строится по
-        // его пропорции. В режиме rotate он остаётся портретным и
-        // разворачивается, поэтому размер фиксирован.
-        width: home.rotated ? home.designWidth : home.width
-        height: home.rotated ? home.designHeight : home.height
+        // Холст — это экран, пересчитанный в единицы раскладки. В режиме rotate
+        // он остаётся портретным и разворачивается, поэтому размер фиксирован.
+        width: home.rotated ? home.designWidth : home.width / home.canvasScale
+        height: home.rotated ? home.designHeight : home.height / home.canvasScale
         anchors.centerIn: parent
         rotation: home.rotated ? 90 : 0
+        scale: home.canvasScale
 
-        scale: home.rotated
-               ? Math.min(home.width / height, home.height / width)
-               : 1
-
-        // Раскладка внутри холста: горизонтальная только когда он сам широкий.
-        readonly property bool wide: width > height
-
-        StatusBar {
-            id: status
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-        }
-
-        // Сцена между строкой состояния и доком. Поверхности и приложения
-        // делят её целиком, поэтому каждая занимает всё место и переключается
-        // видимостью, а не пересчётом привязок.
+        // Содержимое не растягивается на всю ширину монитора: оболочка
+        // рассчитана на телефон, и сетка в четыре колонки во весь широкий
+        // экран выглядит не «адаптивно», а сломанно. Лишнее место — поля.
         Item {
-            id: stage
+            id: frame
 
-            anchors.top: status.bottom
-            anchors.bottom: dock.top
-            anchors.bottomMargin: Theme.spacingMedium
-            anchors.left: parent.left
-            anchors.right: parent.right
-
-            Item {
-                id: homeSurface
-
-                anchors.fill: parent
-                visible: !Navigation.inApp && Navigation.surface === "home"
-
-                ClockWidget {
-                    id: clock
-                    anchors.top: parent.top
-                    anchors.topMargin: 56
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    now: home.now
-                }
-
-                PlatinumLogo {
-                    id: logo
-                    anchors.top: clock.bottom
-                    anchors.topMargin: 28
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    width: 300
-                    height: 260
-                }
-
-                AppGrid {
-                    id: apps
-                    anchors.top: logo.bottom
-                    anchors.topMargin: 24
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.leftMargin: Theme.screenMargin
-                    anchors.rightMargin: Theme.screenMargin
-
-                    // Состав приходит из реестра: домашний экран, список
-                    // приложений и док обязаны показывать один набор.
-                    model: Apps.modules
-                    onLaunch: function (id) { Navigation.open(id); }
-                }
-
-                FocusCard {
-                    id: focus
-                    anchors.top: apps.bottom
-                    anchors.topMargin: 26
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.leftMargin: Theme.screenMargin
-                    anchors.rightMargin: Theme.screenMargin
-                }
-            }
-
-            AppsScreen {
-                anchors.fill: parent
-                visible: !Navigation.inApp && Navigation.surface === "apps"
-            }
-
-            AppHost {
-                anchors.fill: parent
-                visible: Navigation.inApp
-            }
-        }
-
-        Dock {
-            id: dock
-
-            anchors.bottom: indicator.top
-            anchors.bottomMargin: 14
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.leftMargin: Theme.screenMargin
-            anchors.rightMargin: Theme.screenMargin
-
-            model: Apps.dock
-        }
-
-        // Жест-бар: место под системный жест «домой».
-        Rectangle {
-            id: indicator
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 10
+            width: Math.min(parent.width, home.designWidth * 1.15)
+            height: parent.height
             anchors.horizontalCenter: parent.horizontalCenter
-            width: parent.width * 0.36
-            height: 5
-            radius: 2.5
-            color: Qt.rgba(0.25, 0.25, 0.35, 0.45)
 
-            // Нажатие на жест-бар возвращает домой: на устройстве без кнопок
-            // это единственный выход из приложения, кроме полосы возврата.
-            MouseArea {
-                anchors.fill: parent
-                anchors.margins: -18
-                onClicked: Navigation.show("home")
+            StatusBar {
+                id: status
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+            }
+
+            // Сцена между строкой состояния и доком. Поверхности и приложения
+            // делят её целиком, поэтому каждая занимает всё место и
+            // переключается видимостью, а не пересчётом привязок.
+            Item {
+                id: stage
+
+                anchors.top: status.bottom
+                anchors.bottom: dock.top
+                anchors.bottomMargin: Theme.spacingMedium
+                anchors.left: parent.left
+                anchors.right: parent.right
+
+                Item {
+                    id: homeSurface
+
+                    anchors.fill: parent
+                    visible: !Navigation.inApp && Navigation.surface === "home"
+
+                    ClockWidget {
+                        id: clock
+                        anchors.top: parent.top
+                        anchors.topMargin: 56
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        now: home.now
+                    }
+
+                    PlatinumLogo {
+                        id: logo
+                        anchors.top: clock.bottom
+                        anchors.topMargin: 28
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: 300
+                        height: 260
+                    }
+
+                    AppGrid {
+                        id: apps
+                        anchors.top: logo.bottom
+                        anchors.topMargin: 24
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.leftMargin: Theme.screenMargin
+                        anchors.rightMargin: Theme.screenMargin
+
+                        // Состав приходит из реестра: домашний экран, список
+                        // приложений и док обязаны показывать один набор.
+                        model: Apps.modules
+                        onLaunch: function (id) { Navigation.open(id); }
+                    }
+
+                    FocusCard {
+                        id: focus
+                        anchors.top: apps.bottom
+                        anchors.topMargin: 26
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.leftMargin: Theme.screenMargin
+                        anchors.rightMargin: Theme.screenMargin
+                    }
+                }
+
+                AppsScreen {
+                    anchors.fill: parent
+                    visible: !Navigation.inApp && Navigation.surface === "apps"
+                }
+
+                AppHost {
+                    anchors.fill: parent
+                    visible: Navigation.inApp
+                }
+            }
+
+            Dock {
+                id: dock
+
+                anchors.bottom: indicator.top
+                anchors.bottomMargin: 14
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.leftMargin: Theme.screenMargin
+                anchors.rightMargin: Theme.screenMargin
+
+                model: Apps.dock
+            }
+
+            // Жест-бар: место под системный жест «домой».
+            Rectangle {
+                id: indicator
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 10
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: parent.width * 0.36
+                height: 5
+                radius: 2.5
+                color: Qt.rgba(0.25, 0.25, 0.35, 0.45)
+
+                // Нажатие на жест-бар возвращает домой: на устройстве без
+                // кнопок это единственный выход из приложения, кроме полосы
+                // возврата.
+                MouseArea {
+                    anchors.fill: parent
+                    anchors.margins: -18
+                    onClicked: Navigation.show("home")
+                }
             }
         }
     }
