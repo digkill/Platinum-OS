@@ -5,7 +5,8 @@
 ## Требования
 
 - Rust stable ≥ 1.85
-- Полные image/package builds: Linux + root (+ qemu-user-static)
+- Полные image/package builds: Linux + root (+ qemu-user-static).
+  На macOS — привилегированный контейнер, см. [Сборка образа в Docker](docker-build.md)
 - Armbian BSP: Linux + сеть + много места/времени
 - Preview shell: `platinum/shell/tools/`
 

@@ -14,6 +14,7 @@
 6. [模块](modules/README.md)
 7. [Shell / UI](shell.md)
 8. [开发指南](development.md)
+9. [在 Docker 中构建镜像](docker-build.md)
 
 ## 速览
 

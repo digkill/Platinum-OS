@@ -5,7 +5,8 @@
 ## 前置条件
 
 - Rust stable ≥ 1.85
-- 完整 image/package 构建：Linux + root（必要时 qemu-user-static）
+- 完整 image/package 构建：Linux + root（必要时 qemu-user-static）。
+  在 macOS 上请使用特权容器，参见[在 Docker 中构建镜像](docker-build.md)
 - Armbian BSP：Linux + 网络 + 充足磁盘/时间
 - Shell 预览：见 `platinum/shell/tools/`
 

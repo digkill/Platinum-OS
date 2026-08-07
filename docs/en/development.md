@@ -7,7 +7,8 @@
 - Rust stable ≥ 1.85
 - From `platinum/`: standard Cargo toolchain
 - Full image/package builds: Linux host with root (or suitable container),
-  `qemu-user-static` for foreign arch when needed
+  `qemu-user-static` for foreign arch when needed.
+  On macOS use a privileged container, see [Building an image in Docker](docker-build.md)
 - Armbian BSP builds: Linux + network + large disk/time budget
 - Shell preview tools: see `platinum/shell/tools/`
 

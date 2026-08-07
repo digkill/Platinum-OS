@@ -15,6 +15,7 @@ build-система на Rust для bootable images.
 6. [Модули](modules/README.md)
 7. [Shell / UI](shell.md)
 8. [Руководство разработчика](development.md)
+9. [Сборка образа в Docker](docker-build.md)
 
 ## Краткие факты
 
