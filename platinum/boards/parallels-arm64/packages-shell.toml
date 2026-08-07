@@ -22,6 +22,9 @@ install = [
     "systemd",
     "systemd-sysv",
     "systemd-resolved",
+    # Синхронизация времени: без неё `timedatectl set-ntp` не к чему
+    # обращаться, а часы устройства уезжают уже за сутки.
+    "systemd-timesyncd",
     "udev",
     "dbus",
     "kmod",

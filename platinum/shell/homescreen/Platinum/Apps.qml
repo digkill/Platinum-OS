@@ -91,6 +91,11 @@ QtObject {
             id: "call", icon: "dock-call", title: "Call",
             description: "Набор номера и недавние вызовы.",
             screen: "CallScreen.qml"
+        },
+        {
+            id: "timezone", icon: "clock-home", title: "Часовой пояс",
+            description: "Выбор часового пояса устройства.",
+            screen: "TimezoneScreen.qml"
         }
     ]
 

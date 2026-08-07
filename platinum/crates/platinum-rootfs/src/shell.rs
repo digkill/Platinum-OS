@@ -16,6 +16,8 @@ use std::{
 use thiserror::Error;
 use tracing::info;
 
+use crate::settings_agent::{SettingsAgent, SettingsAgentError};
+
 /// Каталог drop-in конфигурации display manager.
 const SDDM_DIRECTORY: &str = "etc/sddm.conf.d";
 
@@ -70,6 +72,9 @@ pub enum ShellError {
         #[source]
         source: io::Error,
     },
+    /// Посредника для системных настроек не удалось поставить.
+    #[error(transparent)]
+    SettingsAgent(#[from] SettingsAgentError),
 }
 
 /// Параметры графической оболочки.
@@ -143,6 +148,7 @@ impl ShellConfigurator {
         })?;
 
         self.install_homescreen(rootfs)?;
+        self.install_settings_agent(rootfs)?;
         self.select_graphical_target(rootfs)?;
 
         info!(
@@ -150,6 +156,22 @@ impl ShellConfigurator {
             autologin = self.spec.autologin_user.is_some(),
             "graphical shell enabled"
         );
+
+        Ok(())
+    }
+
+    /// Ставит посредника для системных настроек.
+    ///
+    /// Оболочка на чистом QML не может выполнять команды, поэтому сменить
+    /// часовой пояс сама не в состоянии. Посредник ставится вместе с ней и
+    /// только при автоматическом входе: он привязан к пользователю, от имени
+    /// которого оболочка пишет заявку.
+    fn install_settings_agent(&self, rootfs: &Path) -> Result<(), ShellError> {
+        let Some(user) = &self.spec.autologin_user else {
+            return Ok(());
+        };
+
+        SettingsAgent::new(user.clone())?.apply(rootfs)?;
 
         Ok(())
     }

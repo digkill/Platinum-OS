@@ -36,7 +36,22 @@ AppScreen {
     AppRow {
         width: parent.width
         title: "Часовой пояс"
-        subtitle: "Задан образом при сборке системы."
-        trailing: Qt.formatDateTime(DeviceState.now, "t")
+        subtitle: "Нажмите, чтобы выбрать другой."
+        trailing: SystemSettings.timezone
+        interactive: true
+        onActivated: Navigation.open("timezone")
+    }
+
+    AppRow {
+        width: parent.width
+        title: "Автоматическое время"
+        subtitle: SystemSettings.ntpEnabled
+                  ? (SystemSettings.ntpSynchronized
+                     ? "Синхронизировано по сети"
+                     : "Синхронизация ещё не прошла")
+                  : "Время задаётся вручную"
+        trailing: SystemSettings.ntpEnabled ? "Вкл" : "Выкл"
+        interactive: true
+        onActivated: Navigation.open("settings")
     }
 }

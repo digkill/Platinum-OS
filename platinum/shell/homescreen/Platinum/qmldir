@@ -4,6 +4,8 @@ singleton DeviceState 1.0 DeviceState.qml
 singleton Store 1.0 Store.qml
 singleton Apps 1.0 Apps.qml
 singleton Navigation 1.0 Navigation.qml
+singleton SystemSettings 1.0 SystemSettings.qml
+singleton Timezones 1.0 Timezones.qml
 GlassPanel 1.0 GlassPanel.qml
 StatusBar 1.0 StatusBar.qml
 ClockWidget 1.0 ClockWidget.qml
@@ -26,3 +28,4 @@ CallScreen 1.0 CallScreen.qml
 MessageScreen 1.0 MessageScreen.qml
 SettingsScreen 1.0 SettingsScreen.qml
 AiScreen 1.0 AiScreen.qml
+TimezoneScreen 1.0 TimezoneScreen.qml

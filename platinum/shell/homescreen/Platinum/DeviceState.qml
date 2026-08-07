@@ -25,7 +25,11 @@ QtObject {
 
     property date now: new Date()
 
-    readonly property string timeLabel: Qt.formatTime(now, "HH:mm")
+    // Формат часов — настройка оболочки, а не системы, поэтому он берётся из
+    // SystemSettings, а не из локали.
+    readonly property string timeLabel: Qt.formatTime(now,
+                                                      SystemSettings.clock24h ? "HH:mm"
+                                                                              : "h:mm AP")
     readonly property string dateLabel: Qt.formatDate(now, "ddd, dd MMM")
 
     // Часы идут каждую секунду, состояние железа опрашивается реже: заряд и

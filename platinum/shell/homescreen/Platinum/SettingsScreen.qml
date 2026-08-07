@@ -40,6 +40,99 @@ AppScreen {
         }
     }
 
+    AppCard {
+        width: parent.width
+        title: "Дата и время"
+        subtitle: "Часовой пояс, синхронизация по сети и формат часов."
+
+        Column {
+            width: parent.width
+            spacing: Theme.spacingSmall
+
+            AppRow {
+                width: parent.width
+                title: "Часовой пояс"
+                subtitle: "По его правилам считается время устройства."
+                trailing: SystemSettings.timezone
+                interactive: true
+                onActivated: Navigation.open("timezone")
+            }
+
+            AppRow {
+                width: parent.width
+                title: "Автоматическое время"
+                subtitle: SystemSettings.ntpEnabled
+                          ? (SystemSettings.ntpSynchronized
+                             ? "Синхронизировано по сети"
+                             : "Синхронизация ещё не прошла")
+                          : "Время задаётся вручную"
+                trailing: SystemSettings.ntpEnabled ? "Вкл" : "Выкл"
+                interactive: true
+                onActivated: SystemSettings.setNtp(!SystemSettings.ntpEnabled)
+            }
+
+            AppRow {
+                width: parent.width
+                title: "24-часовой формат"
+                subtitle: "Иначе часы показываются с AM и PM."
+                trailing: SystemSettings.clock24h ? "Вкл" : "Выкл"
+                interactive: true
+                onActivated: SystemSettings.clock24h = !SystemSettings.clock24h
+            }
+
+            // Ручная установка появляется только при выключенной
+            // синхронизации: иначе выставленное время уехало бы обратно через
+            // секунду, и это выглядело бы поломкой.
+            Column {
+                id: manual
+
+                width: parent.width
+                visible: !SystemSettings.ntpEnabled
+                spacing: Theme.spacingSmall
+
+                // Правка начинается с текущего времени и дальше живёт сама:
+                // иначе тикающие часы сбрасывали бы набранное значение.
+                property date moment: DeviceState.now
+
+                function shift(seconds) {
+                    manual.moment = new Date(manual.moment.getTime() + seconds * 1000);
+                }
+
+                Text {
+                    width: parent.width
+                    text: Qt.formatDateTime(manual.moment, "dd MMMM yyyy, HH:mm")
+                    font.pixelSize: 15
+                    font.weight: Font.DemiBold
+                    color: Theme.textPrimary
+                }
+
+                Row {
+                    spacing: Theme.spacingSmall
+
+                    ActionButton { text: "−1 день"; onClicked: manual.shift(-86400) }
+                    ActionButton { text: "+1 день"; onClicked: manual.shift(86400) }
+                    ActionButton { text: "−1 ч"; onClicked: manual.shift(-3600) }
+                    ActionButton { text: "+1 ч"; onClicked: manual.shift(3600) }
+                }
+
+                Row {
+                    spacing: Theme.spacingSmall
+
+                    ActionButton { text: "−5 мин"; onClicked: manual.shift(-300) }
+                    ActionButton { text: "+5 мин"; onClicked: manual.shift(300) }
+                    ActionButton { text: "−1 мин"; onClicked: manual.shift(-60) }
+                    ActionButton { text: "+1 мин"; onClicked: manual.shift(60) }
+                }
+
+                ActionButton {
+                    text: "Применить"
+                    active: true
+                    onClicked: SystemSettings.setTime(manual.moment)
+                }
+            }
+        }
+    }
+
     AppRow {
         width: parent.width
         title: "Battery"
