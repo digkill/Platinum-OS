@@ -4,7 +4,6 @@ CLAUDE.md
 .claude/*
 .cursor/*
 .idea/*
-docs/*
 # Артефакты сборки Rust: 800+ МБ, воспроизводятся из исходников.
 target/
 
