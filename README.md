@@ -56,6 +56,15 @@ pinned Git commit from `board.toml`.
 `kernel` target for kernel and DTB. It does not yet create the final Platinum
 image and does not replace the Ubuntu Base rootfs with an Armbian image.
 
+## Documentation
+
+Full technical docs (English default, plus Russian and Chinese):
+
+- [docs/](docs/README.md)
+- [English](docs/en/README.md)
+- [Русский](docs/ru/README.md)
+- [中文](docs/zh-CN/README.md)
+
 ## Agent docs
 
 - Cursor rules: `AGENTS.md`, `.cursor/rules/`

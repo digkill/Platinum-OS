@@ -53,6 +53,15 @@ cargo run -p platinum-cli -- build <work-dir> <downloads-dir> <cache-dir> <outpu
 目标以构建 kernel 与 DTB。该命令目前不会生成最终 Platinum 镜像，也不会用
 Armbian 镜像替换 Ubuntu Base rootfs。
 
+## 文档
+
+完整技术文档（默认英文，另有俄文与中文）：
+
+- [docs/](docs/README.md)
+- [English](docs/en/README.md)
+- [Русский](docs/ru/README.md)
+- [中文](docs/zh-CN/README.md)
+
 ## 代理文档
 
 - Cursor 规则：`AGENTS.md`、`.cursor/rules/`

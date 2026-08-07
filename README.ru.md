@@ -56,6 +56,15 @@ cargo run -p platinum-cli -- build <work-dir> <downloads-dir> <cache-dir> <outpu
 Armbian target `kernel` для kernel и DTB. Команда пока не создаёт финальный
 Platinum image и не подменяет Ubuntu Base rootfs Armbian-образом.
 
+## Документация
+
+Подробная техническая документация (английский по умолчанию + русский + китайский):
+
+- [docs/](docs/README.md)
+- [English](docs/en/README.md)
+- [Русский](docs/ru/README.md)
+- [中文](docs/zh-CN/README.md)
+
 ## Документация для агентов
 
 - Правила Cursor: `AGENTS.md`, `.cursor/rules/`
