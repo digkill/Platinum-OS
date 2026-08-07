@@ -1,0 +1,113 @@
+# Состав Platinum userspace с графической оболочкой для Orange Pi Zero 3W.
+#
+# Отличия от безэкранного `packages.toml` — только графический стек. Ядро,
+# DTB и U-Boot по-прежнему приходят из Armbian BSP отдельными `.deb`, поэтому
+# ни одного `linux-image-*` здесь нет: пакет из архива Ubuntu поставил бы
+# второе ядро без vendor-драйверов A733.
+#
+# linux-firmware намеренно отсутствует по той же причине, что и в безэкранном
+# варианте: firmware Wi-Fi и BT приходит из Armbian BSP, а полный пакет Ubuntu
+# добавил бы к образу около гигабайта.
+#
+# Plasma здесь нет вовсе, в отличие от плат разработки. Собственная оболочка
+# ею не пользуется, а на плате с 3-гигабайтным образом лишний рабочий стол —
+# это сотни мегабайт ради сессии, которую никто не откроет.
+
+install_recommends = false
+
+install = [
+    # init и базовая инфраструктура системы
+    "systemd",
+    "systemd-sysv",
+    "systemd-resolved",
+    # Синхронизация времени: без неё часы устройства уезжают уже за сутки, а
+    # часового пояса и NTP с экрана не задать, пока службы нет.
+    "systemd-timesyncd",
+    "udev",
+    "dbus",
+    "kmod",
+
+    # initramfs: kernel-пакеты Armbian вызывают его hooks при установке
+    "initramfs-tools",
+
+    # файловые системы образа и расширение rootfs при первом запуске
+    "e2fsprogs",
+    "dosfstools",
+    "parted",
+
+    # сеть: у платы нет Ethernet, поэтому Wi-Fi — единственный путь наружу
+    "netplan.io",
+    "iproute2",
+    "iputils-ping",
+    "wpasupplicant",
+    "iw",
+    "rfkill",
+
+    # вход в графическую сессию и автологин
+    "sddm",
+
+    # собственная оболочка: композитор-киоск и runtime QML
+    #
+    # Именно `qml-qt6`, а не `qt6-declarative-dev-tools`: второй несёт qmllint,
+    # qmlformat и прочие инструменты, но самого runtime `qml` в нём нет.
+    "cage",
+    "qml-qt6",
+    "qml6-module-qtquick",
+    "qml6-module-qtquick-window",
+    "qml6-module-qtquick-shapes",
+    "qml6-module-qtquick-effects",
+    # QtCore для QML: Settings — этим модулем оболочка хранит тему и настройки
+    "qml6-module-qtcore",
+    # чтение каталога: им оболочка находит установленные приложения по их
+    # `.desktop`, а не хранит список приложений устройства внутри себя
+    "qml6-module-qt-labs-folderlistmodel",
+
+    # оболочка — вложенный Wayland-композитор: модуль сцены чужих окон и
+    # клиентская платформа Wayland для Qt-приложений
+    "qml6-module-qtwayland-compositor",
+    "qt6-wayland",
+
+    # экранная клавиатура оболочки: панель живёт у композитора и обслуживает
+    # и поля оболочки, и окна приложений
+    "qml6-module-qtquick-virtualkeyboard",
+    "qt6-virtualkeyboard-plugin",
+
+    # первое нативное приложение: терминал на Qt. Не foot: он требует wl_seat
+    # v5 и wl_data_device_manager v3, а композитор QtWayland отдаёт v4 и v1
+    "qterminal",
+
+    # тема курсора. Обязательна: без неё и cage, и Qt ищут тему `default`,
+    # которой в Ubuntu Base нет, и указателя мыши на экране нет вовсе. На
+    # платах разработки курсоры приезжали с Plasma, здесь Plasma нет —
+    # значит тема нужна своя. Каталог Adwaita ищет скрипт запуска оболочки.
+    "adwaita-icon-theme",
+
+    # драйверы GPU: Mali A733 под vendor-ядром. Если ускорения не окажется,
+    # композитор поднимается программным рендером — `WLR_RENDERER=pixman`
+    # для cage; проверяется первой загрузкой на плате.
+    "libgl1-mesa-dri",
+    "libegl-mesa0",
+
+    # шрифты: без них оболочка рисует пустые прямоугольники
+    "fonts-noto-core",
+
+    # Plymouth здесь намеренно отсутствует.
+    #
+    # Boot-скрипт Armbian для sun60iw2 строит `console=ttyS0,115200
+    # console=tty1` сам, и Plymouth, обнаружив последовательную консоль,
+    # принудительно включает текстовую тему и не рисует заставку вовсе —
+    # проверено на Raspberry Pi 5 журналом отладки. Пакет ради невидимой
+    # заставки в образ не кладётся.
+
+    # настройка первой загрузки; сюда же пишет оператор через seed
+    "cloud-init",
+
+    # доступ и базовая эксплуатация
+    "openssh-server",
+    "sudo",
+    "ca-certificates",
+    "locales",
+    "tzdata",
+    "less",
+    "nano",
+]
