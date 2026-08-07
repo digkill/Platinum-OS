@@ -50,6 +50,11 @@ pub enum SplashError {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SplashSpec {
     /// Изображение заставки на хосте сборки.
+    ///
+    /// Приходит уже нужного размера: Plymouth в Ubuntu не масштабирует
+    /// изображение из скрипта — `Image.Scale()` даёт пустой спрайт, проверено
+    /// загрузкой. Картинка крупнее экрана будет обрезана, поэтому её сторона
+    /// должна быть примерно вдвое меньше короткой стороны панели.
     pub image: PathBuf,
     /// Цвет фона в формате `#rrggbb`.
     pub background: String,
@@ -159,16 +164,23 @@ fn render_theme() -> String {
 
 /// Формирует скрипт отрисовки.
 ///
-/// Скрипт намеренно вырожденный: ни функций, ни циклов, ни обратных вызовов.
-/// Каждая попытка добавить хоть что-то — вычисление размера от
-/// `Window.GetWidth()`, поток сообщений через `Image.Text`, обновление по
-/// таймеру — заканчивалась молчаливым откатом Plymouth на тему `details`, то
-/// есть текстовым списком служб вместо заставки. Ошибку Plymouth не печатает,
-/// поэтому каждая проверка стоит полной пересборки образа.
+/// Форма скрипта не выбрана, а измерена на живой машине 2026-08-07. Plymouth
+/// не печатает причин, по которым спрайт остаётся пустым, поэтому каждое
+/// свойство проверялось отдельной загрузкой:
 ///
-/// Поток служебных сообщений синим неоном внизу экрана пока не реализован по
-/// той же причине: его нужно отлаживать на живой машине через
-/// `shell/tools/dev-disk.sh`, а не вслепую.
+/// - `Window.GetWidth()` на верхнем уровне возвращает 0: экрана в момент
+///   разбора скрипта ещё нет. Поэтому положение считается в `refresh`, когда
+///   окно уже существует;
+/// - `Image.Scale()` не работает — спрайт получается пустой, экран чёрный.
+///   Поэтому изображение должно приходить уже нужного размера, см.
+///   [`SplashSpec::image`];
+/// - функции и `Plymouth.SetRefreshFunction` работают.
+///
+/// Главное же условие лежит вне скрипта: при `console=ttyS*`/`ttyAMA*` в
+/// командной строке ядра Plymouth принудительно включает текстовую тему
+/// (`serial consoles detected, managing them with details forced`), и никакая
+/// тема не покажется. Плата, которой нужна заставка, не должна объявлять
+/// последовательную консоль.
 fn render_script(background: &str) -> String {
     let (red, green, blue) = parse_color(background);
 
@@ -179,8 +191,15 @@ fn render_script(background: &str) -> String {
          \n\
          logo.image = Image(\"{LOGO_FILE}\");\n\
          logo.sprite = Sprite(logo.image);\n\
-         logo.sprite.SetX(240);\n\
-         logo.sprite.SetY(100);\n"
+         \n\
+         # Положение считается на каждой перерисовке: на верхнем уровне размер\n\
+         # окна ещё нулевой, и логотип уехал бы в угол.\n\
+         fun refresh() {{\n\
+         \x20   logo.sprite.SetX(Window.GetWidth() / 2 - logo.image.GetWidth() / 2);\n\
+         \x20   logo.sprite.SetY(Window.GetHeight() / 2 - logo.image.GetHeight() / 2);\n\
+         }}\n\
+         \n\
+         Plymouth.SetRefreshFunction(refresh);\n"
     )
 }
 
@@ -212,18 +231,19 @@ mod tests {
         assert!(theme.contains("ImageDir=/usr/share/plymouth/themes/platinum\n"));
     }
 
-    /// Скрипт обязан оставаться простым: сложные конструкции Plymouth не
-    /// разбирает и молча уходит на текстовую тему `details`.
+    /// Скрипт обязан держаться того, что проверено загрузкой.
+    ///
+    /// Проверено на живой машине 2026-08-07: масштабирование даёт пустой
+    /// спрайт, а размер окна на верхнем уровне равен нулю. Обе ошибки Plymouth
+    /// не печатает — экран просто остаётся чёрным.
     #[test]
-    fn stays_within_constructs_plymouth_parses() {
+    fn stays_within_constructs_plymouth_executes() {
         let script = render_script("#000000");
 
         assert!(script.contains("Sprite(logo.image)"));
-        // Всё перечисленное Plymouth не разобрал и молча уходил на тему
-        // `details` — текстовый список служб вместо заставки.
-        assert!(!script.contains("fun "));
-        assert!(!script.contains("for ("));
-        assert!(!script.contains("Image.Text("));
+        // Центровка обязана считаться в перерисовке: на верхнем уровне окно
+        // ещё нулевого размера.
+        assert!(script.contains("Plymouth.SetRefreshFunction(refresh)"));
         assert!(!script.contains(").Scale("));
     }
 

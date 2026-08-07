@@ -12,11 +12,20 @@
 #
 # Виртуальная машина должна быть выключена: запись в диск работающей машины
 # повредит файловую систему.
+#
+#   dev-disk.sh shell    — обновить домашний экран
+#   dev-disk.sh splash   — обновить заставку из tools/splash/{logo.png,theme.script}
+#                          и пересобрать initramfs
 set -eu
 
 HERE=$(cd "$(dirname "$0")/.." && pwd)
 HDD="${HDD:-$HOME/Documents/Parallels/PlatinumOS.hdd}"
 WHAT="${1:-shell}"
+
+# Кандидаты темы заставки для действия `splash`. Каталог передаётся внутрь
+# целиком, чтобы правку скрипта и картинки можно было проверить одной
+# загрузкой, не пересобирая образ.
+SPLASH="${SPLASH:-$HERE/tools/splash}"
 
 fail() {
     echo "dev-disk: $1" >&2
@@ -37,14 +46,17 @@ pgrep -f "prl_vm_app" > /dev/null 2>&1 &&
 echo "Диск: $hds"
 
 # Всё, что нужно передать внутрь, монтируется по путям контейнера.
+mkdir -p "$SPLASH"
+
 docker run --rm --privileged \
     -v "$hds:/disk.img" \
     -v "$HERE:/src:ro" \
+    -v "$SPLASH:/splash:ro" \
     -e WHAT="$WHAT" \
     arm64v8/ubuntu:24.04 sh -c '
 set -eu
 apt-get update -qq > /dev/null 2>&1
-apt-get install -y -qq rsync fdisk > /dev/null 2>&1
+apt-get install -y -qq rsync fdisk zstd > /dev/null 2>&1
 
 # Разделы монтируются по смещению, а не через `losetup -P`.
 #
@@ -77,15 +89,19 @@ case "$WHAT" in
         echo "оболочка обновлена"
         ;;
     splash)
+        theme=/mnt/root/usr/share/plymouth/themes/platinum
+        [ -f /splash/logo.png ] && cp /splash/logo.png "$theme/logo.png"
+        [ -f /splash/theme.script ] && cp /splash/theme.script "$theme/platinum.script"
+
         # Тема лежит и в корне, и в initramfs: без пересборки второго заставка
-        # на раннем этапе останется прежней.
-        cp /src/../assets/images/*.png /mnt/root/usr/share/plymouth/themes/platinum/logo.png 2>/dev/null || true
+        # на раннем этапе останется прежней. Загрузчик читает initrd с ESP,
+        # поэтому туда кладётся копия — иначе правка не доедет до загрузки.
         mount --bind /dev /mnt/root/dev
         mount -t proc proc /mnt/root/proc
         mount -t sysfs sys /mnt/root/sys
         chroot /mnt/root update-initramfs -u
         umount /mnt/root/sys /mnt/root/proc /mnt/root/dev
-        cp /mnt/root/boot/initrd.img-* /mnt/esp/initrd.img
+        cp /mnt/root/boot/initrd.img /mnt/esp/initrd.img
         echo "заставка обновлена, initramfs пересобран"
         ;;
     *)
