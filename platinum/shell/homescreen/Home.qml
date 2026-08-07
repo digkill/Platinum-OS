@@ -174,6 +174,18 @@ Rectangle {
                 model: Apps.dock
             }
 
+            // Карусель открытых приложений. Лежит поверх дока, а не в сцене
+            // между строкой состояния и доком: переключатель — это отдельный
+            // режим устройства, и половина домашнего экрана под ним выглядела
+            // бы недорисованной.
+            Carousel {
+                anchors.top: status.bottom
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                visible: Navigation.surface === "switcher"
+            }
+
             // Жест-бар: место под системный жест «домой».
             Rectangle {
                 id: indicator
@@ -185,13 +197,24 @@ Rectangle {
                 radius: 2.5
                 color: Qt.rgba(0.25, 0.25, 0.35, 0.45)
 
-                // Нажатие на жест-бар возвращает домой: на устройстве без
-                // кнопок это единственный выход из приложения, кроме полосы
-                // возврата.
+                // Нажатие возвращает домой, движение вверх открывает карусель:
+                // на устройстве без кнопок это единственные системные жесты, и
+                // они повторяют привычные по телефонам.
                 MouseArea {
                     anchors.fill: parent
                     anchors.margins: -18
-                    onClicked: Navigation.show("home")
+
+                    property real pressedAt: 0
+
+                    onPressed: function (mouse) { pressedAt = mouse.y; }
+
+                    onReleased: function (mouse) {
+                        if (pressedAt - mouse.y > 40) {
+                            Navigation.show("switcher");
+                        } else {
+                            Navigation.show("home");
+                        }
+                    }
                 }
             }
         }

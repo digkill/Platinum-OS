@@ -36,3 +36,4 @@ AiScreen 1.0 AiScreen.qml
 TimezoneScreen 1.0 TimezoneScreen.qml
 ConsoleScreen 1.0 ConsoleScreen.qml
 WindowHost 1.0 WindowHost.qml
+Carousel 1.0 Carousel.qml

@@ -78,9 +78,10 @@ QtObject {
             windows.active = rest.length - 1;
         }
 
-        // Последнее окно закрылось — возвращаемся домой: пустая поверхность
-        // окон выглядела бы зависшей оболочкой.
-        if (rest.length === 0 && Navigation.surface === "window") {
+        // Последнее окно закрылось — возвращаемся домой: и пустая поверхность
+        // окон, и пустая карусель выглядят зависшей оболочкой.
+        if (rest.length === 0
+            && (Navigation.surface === "window" || Navigation.surface === "switcher")) {
             Navigation.show("home");
         }
     }

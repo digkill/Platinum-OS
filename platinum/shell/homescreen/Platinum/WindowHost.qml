@@ -23,28 +23,31 @@ Item {
         radius: 18
         visible: Windows.list.length > 0
 
-        Row {
+        // Переключение живёт в карусели, а не здесь: список названий в строку
+        // не помещался уже на третьем приложении и ничего не показывал о том,
+        // что в окне происходит.
+        ActionButton {
             anchors.left: parent.left
             anchors.leftMargin: Theme.spacingSmall
             anchors.verticalCenter: parent.verticalCenter
-            spacing: Theme.spacingSmall
+            text: "Окна"
+            onClicked: Navigation.show("switcher")
+        }
 
-            Repeater {
-                model: Windows.list
-
-                Pill {
-                    text: modelData.toplevel.title !== ""
-                          ? modelData.toplevel.title
-                          : modelData.toplevel.appId
-
-                    opacity: index === Windows.active ? 1.0 : 0.55
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: Windows.activate(index)
-                    }
-                }
-            }
+        Text {
+            anchors.centerIn: parent
+            width: parent.width * 0.45
+            horizontalAlignment: Text.AlignHCenter
+            elide: Text.ElideRight
+            visible: Windows.active >= 0
+            text: Windows.active >= 0 && Windows.list[Windows.active] !== undefined
+                  ? (Windows.list[Windows.active].toplevel.title !== ""
+                     ? Windows.list[Windows.active].toplevel.title
+                     : Windows.list[Windows.active].toplevel.appId)
+                  : ""
+            font.pixelSize: 15
+            font.weight: Font.DemiBold
+            color: Theme.textPrimary
         }
 
         ActionButton {

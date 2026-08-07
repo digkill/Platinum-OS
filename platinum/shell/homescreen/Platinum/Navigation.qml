@@ -10,7 +10,8 @@ import QtQuick
 QtObject {
     id: navigation
 
-    // Поверхность оболочки: "home", "apps" или "window" — окна приложений.
+    // Поверхность оболочки: "home", "apps", "window" — окно приложения — или
+    // "switcher" — карусель открытых приложений.
     property string surface: "home"
 
     // Открытое приложение; пусто — показана поверхность.
