@@ -140,7 +140,8 @@ WantedBy=multi-user.target
 
 /// Скрипт расширения раздела и файловой системы.
 ///
-/// Используются `parted` и `resize2fs` из `packages.toml`; отдельный
+/// Используются `sfdisk` и `partx` из util-linux, который есть в любой
+/// systemd-системе, и `resize2fs` из `packages.toml`; отдельный
 /// `cloud-guest-utils` ради `growpart` не добавляется.
 const SCRIPT: &str = r#"#!/bin/sh
 # Platinum OS: файл создан сборкой, ручные правки будут перезаписаны.
@@ -184,9 +185,18 @@ free=$((disk_sectors - part_start - part_sectors))
 if [ "$free" -lt 2048 ]; then
     echo "resize-rootfs: раздел уже занимает весь носитель, расширение не требуется"
 else
-    # parted печатает предупреждение о смонтированной ФС и растит раздел на
-    # месте; ядро узнаёт новый размер через BLKPG, перезагрузка не нужна.
-    parted -s -m "$disk" resizepart "$number" 100% || fail "parted не смог расширить раздел"
+    # sfdisk, а не parted: parted отказывается трогать раздел, на котором
+    # смонтирована файловая система, даже в скриптовом режиме — печатает
+    # «Partition is being used. Are you sure you want to continue?» и выходит
+    # с ошибкой. Поймано на живой плате Orange Pi Zero 3W: расширение падало
+    # при каждой первой загрузке.
+    #
+    # `, +` — оставить начало раздела на месте, занять всё свободное до конца
+    # носителя. `--no-reread` обязателен: перечитать таблицу целиком ядро не
+    # даст, пока корень смонтирован, — новый размер доносит partx.
+    echo ", +" | sfdisk --no-reread --force -N "$number" "$disk" \
+        || fail "sfdisk не смог расширить раздел"
+    partx -u "$part" || fail "ядро не приняло новый размер раздела"
 fi
 
 # resize2fs на уже максимальной ФС сообщает «Nothing to do» и выходит с нулём.
@@ -279,8 +289,24 @@ mod tests {
             "скрипт обязан отличать «нечего расширять» от отказа"
         );
         let check = SCRIPT.find("free").expect("проверка свободного места");
-        let parted = SCRIPT.find("resizepart").expect("вызов parted");
-        assert!(check < parted, "свободное место проверяется до parted");
+        let grow = SCRIPT.find("sfdisk").expect("вызов sfdisk");
+        assert!(check < grow, "свободное место проверяется до sfdisk");
+    }
+
+    /// parted отказывается трогать смонтированный раздел даже с `-s`, и
+    /// расширение падало при каждой первой загрузке платы.
+    #[test]
+    fn grows_the_partition_without_parted() {
+        assert!(SCRIPT.contains("sfdisk --no-reread --force -N"));
+        assert!(SCRIPT.contains("partx -u"));
+        // Ищется именно вызов, а не упоминание: в комментарии рядом объяснено,
+        // почему parted здесь не годится.
+        assert!(
+            !SCRIPT
+                .lines()
+                .any(|line| line.trim_start().starts_with("parted")),
+            "parted не работает на смонтированном корне"
+        );
     }
 
     /// Скрипт снимает службу только после успешного расширения.
