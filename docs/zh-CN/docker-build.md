@@ -117,7 +117,8 @@ cargo build -p platinum-cli --release
 ```bash
 hash=$(openssl passwd -6 platinum)
 
-sed 's|homescreen = "../../shell/homescreen"|homescreen = "/src/shell/homescreen"|' \
+sed -e 's|homescreen = "../../shell/homescreen"|homescreen = "/src/shell/homescreen"|' \
+    -e 's|image = "../../../assets/|image = "/repo/assets/|' \
     /src/boards/orangepi-zero3w/system-shell.toml > /work-system.toml
 
 cat >> /work-system.toml <<EOF
@@ -130,7 +131,8 @@ force_password_change = false
 EOF
 ```
 
-`homescreen` 路径改为绝对路径：原文件中它相对于该文件本身，而副本位于别处。
+路径改为绝对路径：原文件中它们相对于该文件本身，而副本位于别处。启动画面图片
+同样如此——它位于 `platinum/` 之外的 `assets/`，因此直接从 `/repo` 取用。
 
 `force_password_change = false` 仅用于开发构建。在没有键盘的设备上，强制改密
 会在自动登录时直接变成死路。

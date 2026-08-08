@@ -124,7 +124,8 @@ black screen.
 ```bash
 hash=$(openssl passwd -6 platinum)
 
-sed 's|homescreen = "../../shell/homescreen"|homescreen = "/src/shell/homescreen"|' \
+sed -e 's|homescreen = "../../shell/homescreen"|homescreen = "/src/shell/homescreen"|' \
+    -e 's|image = "../../../assets/|image = "/repo/assets/|' \
     /src/boards/orangepi-zero3w/system-shell.toml > /work-system.toml
 
 cat >> /work-system.toml <<EOF
@@ -137,8 +138,9 @@ force_password_change = false
 EOF
 ```
 
-The `homescreen` path becomes absolute: in the original file it is relative to
-that file, and the copy lives elsewhere.
+The paths become absolute: in the original file they are relative to that file,
+and the copy lives elsewhere. The splash image is rewritten the same way — it
+lives in `assets/` outside `platinum/`, so it is taken straight from `/repo`.
 
 `force_password_change = false` is for development builds only. On a device
 without a keyboard, a forced password change is a dead end right at autologin.

@@ -122,7 +122,8 @@ cargo build -p platinum-cli --release
 ```bash
 hash=$(openssl passwd -6 platinum)
 
-sed 's|homescreen = "../../shell/homescreen"|homescreen = "/src/shell/homescreen"|' \
+sed -e 's|homescreen = "../../shell/homescreen"|homescreen = "/src/shell/homescreen"|' \
+    -e 's|image = "../../../assets/|image = "/repo/assets/|' \
     /src/boards/orangepi-zero3w/system-shell.toml > /work-system.toml
 
 cat >> /work-system.toml <<EOF
@@ -135,8 +136,9 @@ force_password_change = false
 EOF
 ```
 
-Путь до `homescreen` заменяется на абсолютный: в файле он задан относительно
-самого файла, а копия лежит в другом месте.
+Пути заменяются на абсолютные: в файле они заданы относительно него самого, а
+копия лежит в другом месте. Так же переписывается и картинка заставки — она
+живёт в `assets/` за пределами `platinum/`, поэтому берётся прямо из `/repo`.
 
 `force_password_change = false` — только для сборок разработки. На устройстве
 без клавиатуры требование сменить пароль упирается в тупик прямо на автовходе.
