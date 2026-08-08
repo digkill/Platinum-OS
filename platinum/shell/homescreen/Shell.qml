@@ -45,8 +45,14 @@ WaylandCompositor {
                 anchors.right: parent.right
                 z: 100
 
+                // Режим задаётся из шторки оболочки: "auto" — по запросу поля,
+                // "always" — всегда на экране (с окнами приложений фокус ловит
+                // клиент, и поле оболочки панель уже не вызовет), "off" — с
+                // внешней клавиатурой панель только отнимает место.
+                visible: Keyboard.enabled
+
                 // Панель выезжает снизу и не занимает места, когда не нужна.
-                y: active ? parent.height - height : parent.height
+                y: (active || Keyboard.pinned) ? parent.height - height : parent.height
                 Behavior on y { NumberAnimation { duration: 140 } }
             }
         }

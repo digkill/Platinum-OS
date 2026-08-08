@@ -110,6 +110,10 @@ install = [
     "libegl-mesa0",
     "mesa-vulkan-drivers",
 
+    # SVG: плагин формата лежит не в libqt6svg6, а здесь. Без него значки
+    # оболочки пустые — поймано на плате, где нет Plasma, которая его тянула.
+    "qt6-svg-plugins",
+
     # шрифты: без них оболочка рисует пустые прямоугольники
     "fonts-noto-core",
     "fonts-noto-color-emoji",

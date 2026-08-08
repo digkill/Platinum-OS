@@ -50,6 +50,37 @@ Rectangle {
     // между часами и строкой состояния.
     readonly property date now: DeviceState.now
 
+    // Заставка запуска оболочки.
+    //
+    // Plymouth закрывает загрузку ядра и служб, но между его уходом и первым
+    // кадром оболочки экран успевает моргнуть чёрным — а на устройстве это
+    // выглядит как сбой. Заставка держит логотип, пока сцена не готова, и сама
+    // уходит: ждать нажатия на неё нельзя, это первое, что видит пользователь.
+    Rectangle {
+        id: splash
+
+        anchors.fill: parent
+        z: 1000
+        color: "#000000"
+        visible: opacity > 0
+
+        PlatinumLogo {
+            anchors.centerIn: parent
+            width: 300
+            height: 250
+        }
+
+        // Пауза до начала растворения: без неё логотип мелькает и читается как
+        // артефакт, а не как заставка.
+        Timer {
+            interval: 900
+            running: true
+            onTriggered: splash.opacity = 0
+        }
+
+        Behavior on opacity { NumberAnimation { duration: 420 } }
+    }
+
     Item {
         id: canvas
 
@@ -76,6 +107,22 @@ Rectangle {
                 anchors.top: parent.top
                 anchors.left: parent.left
                 anchors.right: parent.right
+
+                // Шторка тянется от строки состояния: движение вниз открывает
+                // её, касание — тоже, потому что попасть жестом по полосе в
+                // 44 пикселя на ходу выходит не всегда.
+                MouseArea {
+                    anchors.fill: parent
+
+                    property real pressedAt: 0
+
+                    onPressed: function (mouse) { pressedAt = mouse.y; }
+                    onReleased: function (mouse) {
+                        if (mouse.y - pressedAt > 24 || Math.abs(mouse.y - pressedAt) < 8) {
+                            shade.open = true;
+                        }
+                    }
+                }
             }
 
             // Сцена между строкой состояния и доком. Поверхности и приложения
@@ -184,6 +231,13 @@ Rectangle {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 visible: Navigation.surface === "switcher"
+            }
+
+            // Шторка быстрых настроек. Объявлена после дока и карусели, чтобы
+            // лежать поверх них: она вызывается из любого места оболочки.
+            Shade {
+                id: shade
+                anchors.fill: parent
             }
 
             // Жест-бар: место под системный жест «домой».

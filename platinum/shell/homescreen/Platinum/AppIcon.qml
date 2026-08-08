@@ -64,13 +64,28 @@ Item {
         }
 
         // Значок продукта рисуется во всю плитку: фон и скругление у него свои.
+        //
+        // Сначала PNG, при его отсутствии — SVG. Растр здесь основной формат:
+        // рисованный значок выглядит лучше векторного, а Qt сам подставляет
+        // `@2x` и `@3x` рядом с файлом по плотности экрана — та же схема, что
+        // в iOS. SVG остаётся запасным, пока не все значки перерисованы.
         Image {
+            id: artwork
+
+            readonly property string base: app.icon === "" ? "" : "../icons/" + app.icon
+
             anchors.fill: parent
             visible: app.icon !== ""
-            source: app.icon === "" ? "" : "../icons/" + app.icon + ".svg"
+            source: base === "" ? "" : base + ".png"
             sourceSize.width: Theme.iconSize * 2
             sourceSize.height: Theme.iconSize * 2
             smooth: true
+
+            onStatusChanged: {
+                if (status === Image.Error && String(source).endsWith(".png")) {
+                    source = artwork.base + ".svg";
+                }
+            }
         }
 
         Text {

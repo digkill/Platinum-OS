@@ -9,6 +9,7 @@ singleton Timezones 1.0 Timezones.qml
 singleton Console 1.0 Console.qml
 singleton Windows 1.0 Windows.qml
 singleton Installed 1.0 Installed.qml
+singleton Keyboard 1.0 Keyboard.qml
 GlassPanel 1.0 GlassPanel.qml
 StatusBar 1.0 StatusBar.qml
 ClockWidget 1.0 ClockWidget.qml
@@ -37,3 +38,4 @@ TimezoneScreen 1.0 TimezoneScreen.qml
 ConsoleScreen 1.0 ConsoleScreen.qml
 WindowHost 1.0 WindowHost.qml
 Carousel 1.0 Carousel.qml
+Shade 1.0 Shade.qml
